@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.4.0
+// @version      0.5.0
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://github.com/hieuck/DouyinVH/raw/refs/heads/main/douyin-vh.user.js
@@ -163,6 +163,7 @@
     '创作者服务中心': 'Trung tâm dịch vụ nhà sáng tạo',
     '个人主页': 'Trang cá nhân',
     '保存登录信息': 'Lưu thông tin đăng nhập',
+    '我的预约': 'Lịch hẹn của tôi',
     '批量管理': 'Quản lý hàng loạt',
     '私密作品': 'Tác phẩm riêng tư',
     '合集': 'Bộ sưu tập',
@@ -196,13 +197,24 @@
     '[data-e2e*=toolbar]',
     '[data-e2e*=search]',
     '[data-e2e=page-footer]',
+    '[data-e2e=douyin-navigation]',
     '[data-e2e=user-info-follow]',
+    '[data-e2e^=user-info-]',
+    '[data-e2e=user-post-list]',
     '[id*=user-tabbar]',
     '[class*=trust-login-switch]',
     '[class*=user-post-list]',
   ].join(',');
 
   const PROFILE_USER_INFO_SELECTOR = '[data-e2e=user-info], [class*=user-info]';
+  const FOOTER_SELECTOR = 'footer, [data-e2e=page-footer]';
+  const FOOTER_PREFIX_TRANSLATIONS = Object.freeze({
+    '网络谣言曝光台': translations['网络谣言曝光台'],
+    '网上有害信息举报': translations['网上有害信息举报'],
+    '违法和不良信息举报': translations['违法和不良信息举报'],
+    '算法推荐专项举报': translations['算法推荐专项举报'],
+    '体育饭圈专项举报': translations['体育饭圈专项举报'],
+  });
 
   const INTERACTIVE_SELECTOR = [
     'button',
@@ -325,6 +337,22 @@
     return replaceNormalizedText(value, 'Nam');
   }
 
+  function translateFooterText(value, element) {
+    if (typeof value !== 'string' || !hasClosest(element, FOOTER_SELECTOR)) {
+      return value;
+    }
+
+    let translatedValue = value;
+    for (const [source, replacement] of Object.entries(FOOTER_PREFIX_TRANSLATIONS)) {
+      translatedValue = translatedValue.replaceAll(source, replacement);
+    }
+    return translatedValue;
+  }
+
+  function translateUiText(value, element) {
+    return translateFooterText(translateProfileText(value, element), element);
+  }
+
   function isIgnoredElement(element) {
     const tagName = String(element?.tagName || '').toLowerCase();
     return IGNORED_TAGS.has(tagName) || hasClosest(element, '[contenteditable=true]');
@@ -349,7 +377,7 @@
     }
 
     const currentValue = element.getAttribute(attributeName);
-    const translatedValue = translateExact(currentValue);
+    const translatedValue = translateUiText(currentValue, element);
     if (translatedValue !== currentValue && typeof element.setAttribute === 'function') {
       element.setAttribute(attributeName, translatedValue);
     }
@@ -366,16 +394,51 @@
     }
 
     const currentValue = textNode.nodeValue;
+    const textNodes = getTextOnlyChildNodes(parentElement);
+    const combinedValue = textNodes.length > 0
+      ? textNodes.map(node => node.nodeValue || '').join('')
+      : currentValue;
     const context = getElementContext(parentElement);
-    const isProfileLabel = isProfileDynamicLabel(currentValue, parentElement);
-    if (!isTextNodeAllowed(context) && !isGlobalUiLabel(currentValue) && !isProfileLabel) {
+    const isProfileLabel = isProfileDynamicLabel(currentValue, parentElement)
+      || isProfileDynamicLabel(combinedValue, parentElement);
+    if (
+      !isTextNodeAllowed(context)
+      && !isGlobalUiLabel(currentValue)
+      && !isGlobalUiLabel(combinedValue)
+      && !isProfileLabel
+    ) {
       return;
     }
 
-    const translatedValue = translateProfileText(currentValue, parentElement);
+    const combinedTranslation = textNodes.length > 0
+      ? translateUiText(combinedValue, parentElement)
+      : currentValue;
+    if (textNodes.length > 0 && combinedTranslation !== combinedValue) {
+      if (textNode !== textNodes[0]) {
+        return;
+      }
+      textNodes[0].nodeValue = combinedTranslation;
+      for (const remainingNode of textNodes.slice(1)) {
+        remainingNode.nodeValue = '';
+      }
+      return;
+    }
+
+    const translatedValue = translateUiText(currentValue, parentElement);
     if (translatedValue !== currentValue) {
       textNode.nodeValue = translatedValue;
     }
+  }
+
+  function getTextOnlyChildNodes(element) {
+    if (!element || !element.childNodes) {
+      return [];
+    }
+
+    const childNodes = Array.from(element.childNodes);
+    return childNodes.length > 1 && childNodes.every(node => node.nodeType === 3)
+      ? childNodes
+      : [];
   }
 
   function translateElementAttributes(element) {
@@ -549,6 +612,7 @@
     isGlobalUiLabel,
     translateExact,
     translateProfileText,
+    translateFooterText,
     translateTextNode,
     isTextNodeAllowed,
     translateElementAttributes,

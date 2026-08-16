@@ -7,7 +7,7 @@ Userscript Việt hóa giao diện web Douyin, tập trung vào nhãn hệ thố
 - Dịch menu, điều hướng, nút, tooltip, placeholder, nhãn trợ năng, hồ sơ cá nhân và chân trang.
 - Theo dõi DOM động của Douyin SPA bằng `MutationObserver`.
 - Dịch exact-match để không thay đổi caption, hashtag, tên tài khoản hoặc bình luận.
-- Dịch có kiểm soát một số nhãn động trên hồ sơ như mã Douyin và số người đang phát trực tiếp.
+- Dịch có kiểm soát một số nhãn động trên hồ sơ như mã Douyin và số người đang phát trực tiếp, kể cả khi Douyin tách chúng thành nhiều text node.
 - Không cần build: file `.user.js` có thể cài trực tiếp.
 
 ## Cài đặt
@@ -22,7 +22,7 @@ Có thể mở trực tiếp file `douyin-vh.user.js` trong trình duyệt để
 
 ## Phạm vi an toàn
 
-Script chỉ dịch chuỗi có trong từ điển và nằm ở vùng giao diện hoặc phần tử tương tác. Vùng feed thông thường bị loại trừ; caption, hashtag, tên tài khoản, bình luận và metadata video không được dịch tự động. Các mẫu động như `抖音号：...` và `N人正在直播` chỉ được nhận diện trong vùng thông tin hồ sơ.
+Script chỉ dịch chuỗi có trong từ điển và nằm ở vùng giao diện hoặc phần tử tương tác. Vùng feed thông thường bị loại trừ; caption, hashtag, tên tài khoản, bình luận và metadata video không được dịch tự động. Các mẫu động như `抖音号：...` và `N人正在直播` chỉ được nhận diện trong vùng thông tin hồ sơ. Các nhãn báo cáo trong chân trang có thể đi kèm số điện thoại/email; script chỉ dịch phần nhãn và giữ nguyên thông tin liên hệ.
 
 Nếu Douyin thêm một nhãn giao diện mới, bổ sung cặp `tiếng Trung: 'bản dịch tiếng Việt'` vào `translations` trong `douyin-vh.user.js`. Không thêm quy tắc dịch theo substring vì có thể làm thay đổi nội dung người dùng.
 

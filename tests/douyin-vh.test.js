@@ -115,6 +115,7 @@ test('translates the remaining profile and footer labels', () => {
     '下载抖音': 'Tải Douyin',
     '抖音电商': 'Thương mại điện tử Douyin',
     '保存登录信息': 'Lưu thông tin đăng nhập',
+    '我的预约': 'Lịch hẹn của tôi',
     '批量管理': 'Quản lý hàng loạt',
     '私密作品': 'Tác phẩm riêng tư',
     '合集': 'Bộ sưu tập',
@@ -181,6 +182,68 @@ test('translates a text node in a footer without throwing', () => {
   douyinVH.translateTextNode(textNode);
 
   assert.equal(textNode.nodeValue, 'Đặt quảng cáo');
+});
+
+test('translates footer report prefixes without changing contact details', () => {
+  const footerElement = {
+    closest(selector) {
+      return selector.includes('footer') ? this : null;
+    },
+  };
+  const footerText = '｜ 违法和不良信息举报：400-140-2108 feedback@douyin.com ｜ 算法推荐专项举报：sfjubao@bytedance.com | 体育饭圈专项举报：tyfq@bytedance.com';
+
+  assert.equal(
+    douyinVH.translateFooterText(footerText, footerElement),
+    '｜ Báo cáo thông tin vi phạm và không lành mạnh：400-140-2108 feedback@douyin.com ｜ Báo cáo chuyên đề về đề xuất thuật toán：sfjubao@bytedance.com | Báo cáo chuyên đề về fandom thể thao：tyfq@bytedance.com',
+  );
+});
+
+test('translates profile labels split across adjacent text nodes', () => {
+  const profileElement = {
+    tagName: 'DIV',
+    closest(selector) {
+      return selector.includes('user-info') ? this : null;
+    },
+  };
+  const textNodes = [
+    { nodeType: 3, nodeValue: '抖音号：', parentElement: profileElement },
+    { nodeType: 3, nodeValue: '1844133415', parentElement: profileElement },
+  ];
+  profileElement.childNodes = textNodes;
+
+  douyinVH.translateTextNode(textNodes[0]);
+
+  assert.equal(textNodes[0].nodeValue, 'Douyin ID: 1844133415');
+  assert.equal(textNodes[1].nodeValue, '');
+});
+
+test('translates profile empty states and navigation labels in their safe regions', () => {
+  const emptyStateNode = {
+    nodeType: 3,
+    nodeValue: '暂无内容',
+    parentElement: {
+      tagName: 'P',
+      closest(selector) {
+        return selector.includes('user-post-list') ? this : null;
+      },
+    },
+  };
+  const navigationNode = {
+    nodeType: 3,
+    nodeValue: '下载抖音精选',
+    parentElement: {
+      tagName: 'DIV',
+      closest(selector) {
+        return selector.includes('douyin-navigation') ? this : null;
+      },
+    },
+  };
+
+  douyinVH.translateTextNode(emptyStateNode);
+  douyinVH.translateTextNode(navigationNode);
+
+  assert.equal(emptyStateNode.nodeValue, 'Chưa có nội dung');
+  assert.equal(navigationNode.nodeValue, 'Tải Douyin Nổi bật');
 });
 
 test('starts in a browser page even when a CommonJS-like module global exists', () => {
