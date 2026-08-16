@@ -15,7 +15,56 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('white-space: nowrap !important'), true);
   assert.equal(douyinVH.searchStyle.text.includes('.xgplayer-setting-title'), true);
   assert.equal(douyinVH.searchStyle.text.includes('min-width: max-content'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-nowrap]'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('max-width: none'), true);
   assert.equal(douyinVH.searchStyle.text.includes('!important'), true);
+});
+
+test('marks translated popup-trigger labels so fixed navigation cells do not wrap', () => {
+  const popupAttributes = new Map([
+    ['data-popupid', 'wallpaper'],
+    ['data-e2e', 'douyin-navigation'],
+  ]);
+  const labelAttributes = new Map();
+  const popupTrigger = {
+    nodeType: 1,
+    tagName: 'DIV',
+    parentElement: null,
+    getAttribute(name) {
+      return popupAttributes.get(name) || null;
+    },
+    setAttribute(name, value) {
+      popupAttributes.set(name, value);
+    },
+  };
+  const labelElement = {
+    nodeType: 1,
+    tagName: 'DIV',
+    parentElement: popupTrigger,
+    getAttribute(name) {
+      return labelAttributes.get(name) || null;
+    },
+    setAttribute(name, value) {
+      labelAttributes.set(name, value);
+    },
+    closest(selector) {
+      return selector === '[data-popupid]'
+        || selector.includes('[data-e2e=douyin-navigation]')
+        ? popupTrigger
+        : null;
+    },
+  };
+  const textNode = {
+    nodeType: 3,
+    nodeValue: '壁纸',
+    parentElement: labelElement,
+  };
+
+  douyinVH.translateTextNode(textNode);
+
+  assert.equal(textNode.nodeValue, 'Hình nền');
+  assert.equal(labelAttributes.get('data-douyin-vh-nowrap'), 'true');
+  assert.equal(popupAttributes.get('data-douyin-vh-nowrap'), 'true');
 });
 
 test('translates leaf labels rendered inside dynamic video players', () => {

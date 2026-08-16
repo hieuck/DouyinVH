@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.3
+// @version      0.9.4
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -237,6 +237,7 @@
   });
 
   const SEARCH_STYLE_ID = 'douyin-vh-search-style';
+  const NO_WRAP_ATTRIBUTE = 'data-douyin-vh-nowrap';
   const SEARCH_PLACEHOLDER = translations[String.fromCodePoint(
     0x641c,
     0x7d22,
@@ -274,6 +275,14 @@
     '  width: max-content !important;',
     '  min-width: max-content !important;',
     '  flex-shrink: 0 !important;',
+    '}',
+    `[${NO_WRAP_ATTRIBUTE}] {`,
+    '  white-space: nowrap !important;',
+    '  width: max-content !important;',
+    '  min-width: max-content !important;',
+    '  max-width: none !important;',
+    '  flex-shrink: 0 !important;',
+    '  word-break: keep-all !important;',
     '}',
   ].join(String.fromCharCode(10))
     .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(
@@ -434,6 +443,26 @@
     return Boolean(element && typeof element.closest === 'function' && element.closest(selector));
   }
 
+  function markNoWrapUiAncestors(element) {
+    if (!hasClosest(element, '[data-popupid]')) {
+      return;
+    }
+
+    let currentElement = element;
+    while (currentElement && currentElement.nodeType === 1) {
+      if (typeof currentElement.setAttribute === 'function') {
+        currentElement.setAttribute(NO_WRAP_ATTRIBUTE, 'true');
+      }
+
+      const isPopupTrigger = typeof currentElement.getAttribute === 'function'
+        && currentElement.getAttribute('data-popupid') !== null;
+      if (isPopupTrigger) {
+        break;
+      }
+      currentElement = currentElement.parentElement;
+    }
+  }
+
   function isProfileGenderElement(element) {
     return Boolean(
       element
@@ -564,12 +593,14 @@
       for (const remainingNode of textNodes.slice(1)) {
         remainingNode.nodeValue = '';
       }
+      markNoWrapUiAncestors(parentElement);
       return;
     }
 
     const translatedValue = translateUiText(currentValue, parentElement);
     if (translatedValue !== currentValue) {
       textNode.nodeValue = translatedValue;
+      markNoWrapUiAncestors(parentElement);
     }
   }
 
