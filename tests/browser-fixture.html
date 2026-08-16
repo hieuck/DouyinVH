@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang=zh-CN>
+<head>
+  <meta charset=utf-8>
+  <title>DouyinVH Browser Fixture</title>
+</head>
+<body>
+  <header>
+    <nav>
+      <button>推荐</button>
+      <button>搜索</button>
+      <input placeholder=搜索>
+    </nav>
+  </header>
+
+  <section id=player>
+    <button>清屏</button>
+    <button>连播</button>
+  </section>
+
+  <article>
+    <p id=caption>推荐这条视频</p>
+    <p id=exact-user-content>推荐</p>
+    <p id=hashtag>#推荐</p>
+  </article>
+
+  <div id=dynamic></div>
+
+  <script src=../douyin-vh.user.js></script>
+  <script>
+    setTimeout(() => {
+      const button = document.createElement('button');
+      button.textContent = '倍速';
+      document.querySelector('#dynamic').append(button);
+    }, 50);
+  </script>
+</body>
+</html>
