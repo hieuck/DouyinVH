@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.17
+// @version      0.9.18
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @match        https://live.douyin.com/*
@@ -267,6 +267,8 @@
   const SEARCH_STYLE_ID = 'douyin-vh-search-style';
   const LIVE_DOUYIN_STYLE_ID = 'douyin-vh-live-domain-style';
   const LIVE_DOUYIN_HOSTNAME = 'live.douyin.com';
+  const LIVE_PLAYER_CLIP_TOP_PROPERTY = '--douyin-vh-live-player-clip-top';
+  const LIVE_PLAYER_CLIP_RIGHT_PROPERTY = '--douyin-vh-live-player-clip-right';
   const LIVE_PLAYER_CLIP_BOTTOM_PROPERTY = '--douyin-vh-live-player-clip-bottom';
   const NO_WRAP_ATTRIBUTE = 'data-douyin-vh-nowrap';
   const TRANSLATED_ATTRIBUTE = 'data-douyin-vh-translated';
@@ -361,7 +363,7 @@
 
   const LIVE_DOUYIN_STYLE_TEXT = [
     '.LivePlayer_LivingPlayer {',
-    `  clip-path: inset(0 0 var(${LIVE_PLAYER_CLIP_BOTTOM_PROPERTY}, 0px) 0) !important;`,
+    `  clip-path: inset(var(${LIVE_PLAYER_CLIP_TOP_PROPERTY}, 0px) var(${LIVE_PLAYER_CLIP_RIGHT_PROPERTY}, 0px) var(${LIVE_PLAYER_CLIP_BOTTOM_PROPERTY}, 0px) 0) !important;`,
     '}',
     '',
     '.LivePlayer_LivingPlayer,',
@@ -1139,6 +1141,73 @@
     return Math.max(0, Math.ceil(playerBottom - giftTop));
   }
 
+  function calculateLivePlayerClipTop(playerRect, headerRect) {
+    const playerTop = getRectEdge(playerRect, 'top');
+    const headerBottom = getRectEdge(headerRect, 'bottom');
+    if (playerTop === null || headerBottom === null) {
+      return 0;
+    }
+
+    return Math.max(0, Math.ceil(headerBottom - playerTop));
+  }
+
+  function calculateLivePlayerClipRight(playerRect, panelRect) {
+    const playerLeft = getRectEdge(playerRect, 'left');
+    const playerRight = getRectEdge(playerRect, 'right');
+    const panelLeft = getRectEdge(panelRect, 'left');
+    const panelRight = getRectEdge(panelRect, 'right');
+    if (
+      playerLeft === null
+      || playerRight === null
+      || panelLeft === null
+      || panelRight === null
+      || panelRight <= playerLeft
+      || panelLeft >= playerRight
+    ) {
+      return 0;
+    }
+
+    return Math.max(0, Math.ceil(playerRight - Math.max(playerLeft, panelLeft)));
+  }
+
+  function findLiveHeaderRect(documentObject) {
+    if (typeof documentObject?.querySelectorAll !== 'function') {
+      return null;
+    }
+
+    const headers = Array.from(documentObject.querySelectorAll(
+      'header, #douyin-header, [data-e2e=header]',
+    ));
+    return headers
+      .map(element => (
+        typeof element?.getBoundingClientRect === 'function'
+          ? element.getBoundingClientRect()
+          : null
+      ))
+      .filter(rect => rect && Number(rect.width) > 0 && Number(rect.height) > 0)
+      .sort((left, right) => getRectEdge(right, 'bottom') - getRectEdge(left, 'bottom'))[0]
+      || null;
+  }
+
+  function findLiveGiftPanelRect(documentObject) {
+    if (typeof documentObject?.querySelectorAll !== 'function') {
+      return null;
+    }
+
+    const panels = Array.from(documentObject.querySelectorAll(
+      '[data-e2e=__right_gift_panel__], #live-gift-panel-right',
+    ));
+    return panels
+      .map(element => (
+        typeof element?.getBoundingClientRect === 'function'
+          ? element.getBoundingClientRect()
+          : null
+      ))
+      .filter(rect => rect && Number(rect.width) > 0 && Number(rect.height) > 0)
+      .sort((left, right) => getRectEdge(left, 'left') - getRectEdge(right, 'left'))[0]
+      || null;
+  }
+
   function updateLivePlayerClip(documentObject) {
     if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
       return;
@@ -1149,16 +1218,34 @@
     const giftRect = typeof giftBar?.getBoundingClientRect === 'function'
       ? giftBar.getBoundingClientRect()
       : null;
+    const headerRect = findLiveHeaderRect(documentObject);
+    const giftPanelRect = findLiveGiftPanelRect(documentObject);
 
     for (const player of players) {
       if (!player?.style || typeof player.getBoundingClientRect !== 'function') {
         continue;
       }
 
-      const clipBottom = calculateLivePlayerClipBottom(
-        player.getBoundingClientRect(),
-        giftRect,
-      );
+      const playerRect = player.getBoundingClientRect();
+      const clipTop = calculateLivePlayerClipTop(playerRect, headerRect);
+      const clipRight = calculateLivePlayerClipRight(playerRect, giftPanelRect);
+      const clipBottom = calculateLivePlayerClipBottom(playerRect, giftRect);
+      if (clipTop > 0) {
+        player.style.setProperty(
+          LIVE_PLAYER_CLIP_TOP_PROPERTY,
+          `${clipTop}px`,
+        );
+      } else {
+        player.style.removeProperty(LIVE_PLAYER_CLIP_TOP_PROPERTY);
+      }
+      if (clipRight > 0) {
+        player.style.setProperty(
+          LIVE_PLAYER_CLIP_RIGHT_PROPERTY,
+          `${clipRight}px`,
+        );
+      } else {
+        player.style.removeProperty(LIVE_PLAYER_CLIP_RIGHT_PROPERTY);
+      }
       if (clipBottom > 0) {
         player.style.setProperty(
           LIVE_PLAYER_CLIP_BOTTOM_PROPERTY,
@@ -1394,6 +1481,8 @@
     translateFooterText,
     translateTextNode,
     translatePlayerLeafText,
+    calculateLivePlayerClipTop,
+    calculateLivePlayerClipRight,
     calculateLivePlayerClipBottom,
     scanPlayerUi,
     scanLiveUi,

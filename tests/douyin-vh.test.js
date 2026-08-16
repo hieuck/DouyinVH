@@ -50,7 +50,41 @@ test('clips live player paint at the gift bar without changing layout', () => {
   );
   assert.match(
     douyinVH.liveDouyinStyle.text,
-    /clip-path: inset\(0 0 var\(--douyin-vh-live-player-clip-bottom, 0px\) 0\) !important/u,
+    /clip-path: inset\(var\(--douyin-vh-live-player-clip-top, 0px\) var\(--douyin-vh-live-player-clip-right, 0px\) var\(--douyin-vh-live-player-clip-bottom, 0px\) 0\) !important/u,
+  );
+});
+
+test('clips live player paint below the fixed header without changing layout', () => {
+  assert.equal(
+    douyinVH.calculateLivePlayerClipTop({ top: 0 }, { bottom: 56 }),
+    56,
+  );
+  assert.equal(
+    douyinVH.calculateLivePlayerClipTop({ top: 20 }, { bottom: 56 }),
+    36,
+  );
+  assert.equal(
+    douyinVH.calculateLivePlayerClipTop({ top: 0 }, { bottom: 0 }),
+    0,
+  );
+  assert.match(
+    douyinVH.liveDouyinStyle.text,
+    /clip-path: inset\(var\(--douyin-vh-live-player-clip-top, 0px\) var\(--douyin-vh-live-player-clip-right, 0px\) var\(--douyin-vh-live-player-clip-bottom, 0px\) 0\) !important/u,
+  );
+});
+
+test('clips live player paint before the open gift panel without changing layout', () => {
+  assert.equal(
+    douyinVH.calculateLivePlayerClipRight({ left: 0, right: 1217 }, { left: 834, right: 1209 }),
+    383,
+  );
+  assert.equal(
+    douyinVH.calculateLivePlayerClipRight({ left: 0, right: 1217 }, { left: 1300, right: 1400 }),
+    0,
+  );
+  assert.match(
+    douyinVH.liveDouyinStyle.text,
+    /clip-path: inset\(var\(--douyin-vh-live-player-clip-top, 0px\) var\(--douyin-vh-live-player-clip-right, 0px\) var\(--douyin-vh-live-player-clip-bottom, 0px\) 0\) !important/u,
   );
 });
 
