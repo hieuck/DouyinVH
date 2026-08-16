@@ -8,6 +8,7 @@ Userscript Việt hóa giao diện web Douyin, tập trung vào nhãn hệ thố
 - Theo dõi DOM động của Douyin SPA bằng `MutationObserver`.
 - Dịch exact-match để không thay đổi caption, hashtag, tên tài khoản hoặc bình luận.
 - Dịch có kiểm soát một số nhãn động trên hồ sơ như mã Douyin và số người đang phát trực tiếp, kể cả khi Douyin tách chúng thành nhiều text node.
+- Dịch menu tài khoản và menu nhà sáng tạo khi popup được mở.
 - Không cần build: file `.user.js` có thể cài trực tiếp.
 
 ## Cài đặt

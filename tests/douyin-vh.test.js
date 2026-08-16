@@ -246,6 +246,34 @@ test('translates profile empty states and navigation labels in their safe region
   assert.equal(navigationNode.nodeValue, 'Tải Douyin Nổi bật');
 });
 
+test('translates account and creator popup labels without translating video titles', () => {
+  const expectedTranslations = {
+    '我的喜欢': 'Đã thích',
+    '我的收藏': 'Đã lưu',
+    '我的作品': 'Tác phẩm của tôi',
+    '我的订单': 'Đơn hàng của tôi',
+    '30天内': 'Trong 30 ngày',
+    '发布视频/图文': 'Đăng video / bài viết',
+    '视频管理': 'Quản lý video',
+    '作品数据': 'Dữ liệu tác phẩm',
+    '开直播': 'Bắt đầu phát trực tiếp',
+    '直播数据': 'Dữ liệu livestream',
+    '创作者学习中心': 'Trung tâm học tập dành cho nhà sáng tạo',
+    '创作者中心': 'Trung tâm nhà sáng tạo',
+    '剪映专业版': 'CapCut Pro',
+    'AI音乐创作': 'Sáng tác nhạc bằng AI',
+  };
+
+  for (const [source, expected] of Object.entries(expectedTranslations)) {
+    assert.equal(douyinVH.translateExact(source), expected, source);
+  }
+
+  assert.equal(
+    douyinVH.translateExact('44分钟经典草原歌曲合集。#草原歌曲'),
+    '44分钟经典草原歌曲合集。#草原歌曲',
+  );
+});
+
 test('starts in a browser page even when a CommonJS-like module global exists', () => {
   const source = fs.readFileSync(require.resolve('../douyin-vh.user.js'), 'utf8');
   const documentElement = {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.5.0
+// @version      0.6.0
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://github.com/hieuck/DouyinVH/raw/refs/heads/main/douyin-vh.user.js
@@ -145,6 +145,20 @@
     '获赞': 'Lượt thích nhận được',
     '作品': 'Tác phẩm',
     '喜欢': 'Đã thích',
+    '我的喜欢': 'Đã thích',
+    '我的收藏': 'Đã lưu',
+    '我的作品': 'Tác phẩm của tôi',
+    '我的订单': 'Đơn hàng của tôi',
+    '30天内': 'Trong 30 ngày',
+    '发布视频/图文': 'Đăng video / bài viết',
+    '视频管理': 'Quản lý video',
+    '作品数据': 'Dữ liệu tác phẩm',
+    '开直播': 'Bắt đầu phát trực tiếp',
+    '直播数据': 'Dữ liệu livestream',
+    '创作者学习中心': 'Trung tâm học tập dành cho nhà sáng tạo',
+    '创作者中心': 'Trung tâm nhà sáng tạo',
+    '剪映专业版': 'CapCut Pro',
+    'AI音乐创作': 'Sáng tác nhạc bằng AI',
     '历史记录': 'Lịch sử',
     '观看历史': 'Lịch sử xem',
     '稍后再看': 'Xem sau',
