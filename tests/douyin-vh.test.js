@@ -341,8 +341,18 @@ test('translates livestream gifts, recharge and audience filters without scannin
   ]);
   const chatRoot = createContainer([], { 'data-e2e': 'live-chatting' });
   const audiencePanel = createContainer([audienceHeader, audienceFilters, chatRoot]);
+  const liveSurface = createContainer([giftsRoot, rechargeRoot, audiencePanel]);
+  const appRoot = createContainer([liveSurface]);
+  const body = {
+    nodeType: 1,
+    tagName: 'BODY',
+    children: [appRoot],
+    parentElement: null,
+  };
+  appRoot.parentElement = body;
 
   const documentObject = {
+    body,
     querySelectorAll(selector) {
       if (selector === '[data-e2e=gifts-container]') {
         return [giftsRoot];
@@ -379,6 +389,7 @@ test('translates livestream gifts, recharge and audience filters without scannin
   assert.equal(rechargeRoot.children[0].textContent, 'Nạp tiền');
   assert.equal(giftsRoot.getAttribute('data-douyin-vh-live-layer'), 'true');
   assert.equal(audiencePanel.getAttribute('data-douyin-vh-live-layer'), 'true');
+  assert.equal(appRoot.getAttribute('data-douyin-vh-live-root'), 'true');
   assert.equal(audienceLabel.textContent, 'Người xem trực tuyến');
   assert.deepEqual(
     audienceFilters.children.map(node => node.textContent),

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.11
+// @version      0.9.12
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -268,6 +268,7 @@
   const TRANSLATED_ATTRIBUTE = 'data-douyin-vh-translated';
   const LIVE_TRANSLATED_ATTRIBUTE = 'data-douyin-vh-live-translated';
   const LIVE_LAYER_ATTRIBUTE = 'data-douyin-vh-live-layer';
+  const LIVE_ROOT_ATTRIBUTE = 'data-douyin-vh-live-root';
   const SEARCH_PLACEHOLDER = translations[String.fromCodePoint(
     0x641c,
     0x7d22,
@@ -336,6 +337,9 @@
      `[${LIVE_LAYER_ATTRIBUTE}] {`,
      '  position: relative !important;',
      '  z-index: 10000 !important;',
+     '}',
+     `body:has([${LIVE_ROOT_ATTRIBUTE}=true]) > .i5Ej1sWo {`,
+     '  z-index: 0 !important;',
      '}',
    ].join(String.fromCharCode(10))
     .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(
@@ -828,6 +832,24 @@
     }
   }
 
+  function findLiveOverlayRoot(element) {
+    let currentElement = element;
+    while (currentElement && currentElement.parentElement) {
+      if (currentElement.parentElement.tagName === 'BODY') {
+        return currentElement;
+      }
+      currentElement = currentElement.parentElement;
+    }
+    return null;
+  }
+
+  function markLiveOverlayRoot(element) {
+    const rootElement = findLiveOverlayRoot(element);
+    if (rootElement && typeof rootElement.setAttribute === 'function') {
+      rootElement.setAttribute(LIVE_ROOT_ATTRIBUTE, 'true');
+    }
+  }
+
   function getDescendantElements(element) {
     if (!element || element.nodeType !== 1) {
       return [];
@@ -914,6 +936,11 @@
       ...documentObject.querySelectorAll(LIVE_GIFT_SELECTOR),
       ...documentObject.querySelectorAll(LIVE_RECHARGE_SELECTOR),
     ];
+    const audienceCounts = [...documentObject.querySelectorAll(LIVE_AUDIENCE_SELECTOR)];
+    for (const liveElement of [...scopedRoots, ...audienceCounts]) {
+      markLiveOverlayRoot(liveElement);
+    }
+
     for (const rootElement of scopedRoots) {
       markLiveOverlayLayer(rootElement);
       for (const element of getDescendantElements(rootElement)) {
@@ -921,7 +948,7 @@
       }
     }
 
-    for (const audienceCount of documentObject.querySelectorAll(LIVE_AUDIENCE_SELECTOR)) {
+    for (const audienceCount of audienceCounts) {
       markLiveOverlayLayer(findLiveSidePanel(audienceCount));
       const audienceHeader = audienceCount.parentElement;
       for (const element of getDescendantElements(audienceHeader)) {
