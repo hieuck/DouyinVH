@@ -18,6 +18,8 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-nowrap]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('max-width: none'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-translated]'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-live-translated]'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('word-break: keep-all'), true);
   assert.equal(douyinVH.searchStyle.text.includes('Segoe UI'), true);
   assert.equal(douyinVH.searchStyle.text.includes('font-kerning: normal'), true);
   assert.equal(douyinVH.searchStyle.text.includes('!important'), true);
@@ -238,6 +240,128 @@ test('translates split livestream entry prompt around the F key hint', () => {
     ['Nhấp', ' hoặc nhấn ', ' để vào', ' phòng livestream'],
   );
   assert.equal(attributes.get('data-douyin-vh-translated'), 'true');
+});
+
+test('translates livestream gifts, recharge and audience filters without scanning chat content', () => {
+  function createLeaf(value) {
+    const attributes = new Map();
+    return {
+      nodeType: 1,
+      tagName: 'DIV',
+      childElementCount: 0,
+      childNodes: [],
+      textContent: value,
+      parentElement: null,
+      getAttribute(name) {
+        return attributes.get(name) || null;
+      },
+      setAttribute(name, nextValue) {
+        attributes.set(name, nextValue);
+      },
+      closest() {
+        return null;
+      },
+      attributes,
+    };
+  }
+
+  function createContainer(children) {
+    const container = {
+      nodeType: 1,
+      tagName: 'DIV',
+      childElementCount: children.length,
+      childNodes: children,
+      children,
+      parentElement: null,
+      closest() {
+        return null;
+      },
+      querySelectorAll(selector) {
+        assert.equal(selector, '*');
+        const descendants = [];
+        for (const child of children) {
+          descendants.push(child);
+          if (typeof child.querySelectorAll === 'function') {
+            descendants.push(...child.querySelectorAll('*'));
+          }
+        }
+        return descendants;
+      },
+    };
+    for (const child of children) {
+      child.parentElement = container;
+    }
+    return container;
+  }
+
+  const giftLeaves = [
+    '人气票',
+    '小心心',
+    '星河之钥',
+    '大啤酒',
+    '棒棒糖',
+    '给到夯',
+    '玫瑰',
+    '天作之合',
+    '鲜花',
+    '七夕快乐',
+    '心疼',
+    '2钻',
+  ].map(createLeaf);
+  const giftsRoot = createContainer(giftLeaves);
+
+  const rechargeRoot = createContainer([createLeaf('充值')]);
+
+  const audienceLabel = createLeaf('在线观众');
+  const audienceCount = createLeaf('5');
+  const audienceHeader = createContainer([audienceLabel, audienceCount]);
+  const audienceFilters = createContainer([
+    createLeaf('全部'),
+    createLeaf('1000贡献用户(0)'),
+    createLeaf('高等级用户'),
+  ]);
+  createContainer([audienceHeader, audienceFilters]);
+
+  const documentObject = {
+    querySelectorAll(selector) {
+      if (selector === '[data-e2e=gifts-container]') {
+        return [giftsRoot];
+      }
+      if (selector === '[data-e2e=recharge-btn]') {
+        return [rechargeRoot];
+      }
+      if (selector === '[data-e2e=live-room-audience]') {
+        return [audienceCount];
+      }
+      return [];
+    },
+  };
+
+  douyinVH.scanLiveUi(documentObject);
+
+  assert.deepEqual(
+    giftLeaves.map(node => node.textContent),
+    [
+      'Vé phổ biến',
+      'Tim nhỏ',
+      'Chìa khóa ngân hà',
+      'Bia lớn',
+      'Kẹo mút',
+      'Đủ lực',
+      'Hoa hồng',
+      'Trời sinh một cặp',
+      'Hoa tươi',
+      'Thất Tịch vui vẻ',
+      'Thương quá',
+      '2 kim cương',
+    ],
+  );
+  assert.equal(rechargeRoot.children[0].textContent, 'Nạp tiền');
+  assert.equal(audienceLabel.textContent, 'Người xem trực tuyến');
+  assert.deepEqual(
+    audienceFilters.children.map(node => node.textContent),
+    ['Tất cả', 'Người đóng góp 1000 (0)', 'Người dùng cấp cao'],
+  );
 });
 
 test('adds and removes compact search styling with the controller lifecycle', () => {

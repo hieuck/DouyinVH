@@ -11,7 +11,7 @@ Userscript Việt hóa giao diện web Douyin, tập trung vào nhãn hệ thố
 - Dịch menu tài khoản và menu nhà sáng tạo khi popup được mở.
 - Dịch popup cài đặt, giao diện sáng/tối, phím tắt và trợ giúp ở khu vực phía dưới.
 - Dịch popup giới thiệu Douyin, dịch vụ sáng tạo, an toàn và các nền tảng liên kết.
-- Dịch các nhãn điều khiển trong player feed, livestream và modal video chương; thu nhỏ chữ trong ô tìm kiếm.
+- Dịch các nhãn điều khiển trong player feed, livestream và modal video chương; dịch quà tặng, đơn vị kim cương, bộ lọc người xem; thu nhỏ chữ trong ô tìm kiếm.
 - Không cần build: file `.user.js` có thể cài trực tiếp.
 
 ## Cài đặt
@@ -26,7 +26,7 @@ Có thể mở trực tiếp file `douyin-vh.user.js` trong trình duyệt để
 
 ## Phạm vi an toàn
 
-Script chỉ dịch chuỗi có trong từ điển và nằm ở vùng giao diện hoặc phần tử tương tác. Vùng feed thông thường bị loại trừ; caption, hashtag, tên tài khoản, bình luận và metadata video không được dịch tự động. Các mẫu động như `抖音号：...` và `N人正在直播` chỉ được nhận diện trong vùng thông tin hồ sơ. Các nhãn báo cáo trong chân trang có thể đi kèm số điện thoại/email; script chỉ dịch phần nhãn và giữ nguyên thông tin liên hệ.
+Script chỉ dịch chuỗi có trong từ điển và nằm ở vùng giao diện hoặc phần tử tương tác. Vùng feed thông thường bị loại trừ; caption, hashtag, tên tài khoản, bình luận và metadata video không được dịch tự động. Khu vực livestream dùng selector riêng cho quà tặng, nút nạp tiền và bộ lọc người xem để không quét nội dung chat. Các mẫu động như `抖音号：...`, `N人正在直播` và bộ lọc đóng góp livestream chỉ được nhận diện trong vùng giao diện tương ứng. Các nhãn báo cáo trong chân trang có thể đi kèm số điện thoại/email; script chỉ dịch phần nhãn và giữ nguyên thông tin liên hệ.
 
 Nếu Douyin thêm một nhãn giao diện mới, bổ sung cặp `tiếng Trung: 'bản dịch tiếng Việt'` vào `translations` trong `douyin-vh.user.js`. Không thêm quy tắc dịch theo substring vì có thể làm thay đổi nội dung người dùng.
 

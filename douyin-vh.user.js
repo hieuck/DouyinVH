@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.8
+// @version      0.9.9
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -54,6 +54,7 @@
     '站点地图': 'Sơ đồ trang web',
     '下载抖音': 'Tải Douyin',
     '抖音电商': 'Thương mại điện tử Douyin',
+    '返回推荐': 'Quay lại Đề xuất',
     '手机随时看更方便': 'Xem tiện hơn trên điện thoại',
     '下载 APP': 'Tải ứng dụng',
     '全部': 'Tất cả',
@@ -79,11 +80,14 @@
     '搜索': 'Tìm kiếm',
     '搜索你感兴趣的内容': 'Tìm nội dung bạn quan tâm',
     '充钻石': 'Nạp kim cương',
+    '充值': 'Nạp tiền',
     '客户端': 'Ứng dụng máy tính',
     '下载电脑客户端': 'Tải ứng dụng máy tính',
     '壁纸': 'Hình nền',
     '通知': 'Thông báo',
     '消息': 'Tin nhắn',
+    '在线观众': 'Người xem trực tuyến',
+    '高等级用户': 'Người dùng cấp cao',
     '互动消息': 'Thông báo tương tác',
     '全部消息': 'Tất cả thông báo',
     '赞了你的评论': 'Đã thích bình luận của bạn',
@@ -142,6 +146,17 @@
     '展开': 'Mở rộng',
     '收起': 'Thu gọn',
     '更多': 'Thêm',
+    '人气票': 'Vé phổ biến',
+    '小心心': 'Tim nhỏ',
+    '星河之钥': 'Chìa khóa ngân hà',
+    '大啤酒': 'Bia lớn',
+    '棒棒糖': 'Kẹo mút',
+    '给到夯': 'Đủ lực',
+    '玫瑰': 'Hoa hồng',
+    '天作之合': 'Trời sinh một cặp',
+    '鲜花': 'Hoa tươi',
+    '七夕快乐': 'Thất Tịch vui vẻ',
+    '心疼': 'Thương quá',
     '加载中': 'Đang tải',
     '暂无内容': 'Chưa có nội dung',
     '网络错误': 'Lỗi mạng',
@@ -158,6 +173,7 @@
     '热搜': 'Tìm kiếm phổ biến',
     '热门': 'Phổ biến',
     '直播中': 'Đang phát trực tiếp',
+    '直播加载中': 'Đang tải livestream',
     '查看全部': 'Xem tất cả',
     '私信': 'Tin nhắn riêng',
     '粉丝': 'Người hâm mộ',
@@ -235,6 +251,10 @@
     '评论和@': 'Bình luận và @',
     '开启读屏标签': 'Bật nhãn đọc màn hình',
     '读屏标签已关闭': 'Nhãn đọc màn hình đã tắt',
+    '小表情': 'Emoji nhỏ',
+    '会员表情': 'Emoji hội viên',
+    '相约七夕': 'Hẹn nhau mùa Thất Tịch',
+    '开通会员后可使用以下表情': 'Mở hội viên để dùng các emoji sau',
     '你的关注': 'Đang theo dõi',
     '共创': 'Đồng sáng tạo',
     '正在直播': 'Đang phát trực tiếp',
@@ -246,6 +266,7 @@
   const SEARCH_STYLE_ID = 'douyin-vh-search-style';
   const NO_WRAP_ATTRIBUTE = 'data-douyin-vh-nowrap';
   const TRANSLATED_ATTRIBUTE = 'data-douyin-vh-translated';
+  const LIVE_TRANSLATED_ATTRIBUTE = 'data-douyin-vh-live-translated';
   const SEARCH_PLACEHOLDER = translations[String.fromCodePoint(
     0x641c,
     0x7d22,
@@ -292,13 +313,22 @@
     '  flex-shrink: 0 !important;',
      '  word-break: keep-all !important;',
      '}',
-     `[${TRANSLATED_ATTRIBUTE}] {`,
-     '  font-family: Segoe UI, Tahoma, Arial, sans-serif !important;',
-     '  font-kerning: normal !important;',
-     '  font-variant-ligatures: normal !important;',
-     '  letter-spacing: normal !important;',
-     '  word-spacing: normal !important;',
-     '}',
+      `[${TRANSLATED_ATTRIBUTE}] {`,
+      '  font-family: Segoe UI, Tahoma, Arial, sans-serif !important;',
+      '  font-kerning: normal !important;',
+      '  font-variant-ligatures: normal !important;',
+      '  letter-spacing: normal !important;',
+      '  word-spacing: normal !important;',
+      '}',
+      `[${LIVE_TRANSLATED_ATTRIBUTE}] {`,
+      '  font-family: Segoe UI, Tahoma, Arial, sans-serif !important;',
+      '  font-kerning: normal !important;',
+      '  font-variant-ligatures: normal !important;',
+      '  letter-spacing: normal !important;',
+      '  word-spacing: normal !important;',
+      '  white-space: nowrap !important;',
+      '  word-break: keep-all !important;',
+      '}',
    ].join(String.fromCharCode(10))
     .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(
       0x641c,
@@ -379,8 +409,13 @@
   const IGNORED_TAGS = new Set(['script', 'style', 'noscript', 'template', 'svg']);
   const UI_ATTRIBUTES = Object.freeze(['title', 'aria-label', 'placeholder']);
   const GLOBAL_UI_LABELS = new Set([
+    '返回推荐',
     '开启读屏标签',
     '读屏标签已关闭',
+    '小表情',
+    '会员表情',
+    '相约七夕',
+    '开通会员后可使用以下表情',
     '你的关注',
     '共创',
     '下载电脑客户端',
@@ -424,12 +459,40 @@
     '点击或按',
     '进入直播间',
     '直播中',
+    '直播加载中',
     '章节要点',
     '内容由AI生成',
     '引言',
     '音乐特点',
   ]);
-  const PLAYER_COUNT_PATTERN = /^(\s*\d[\d.,]*)(万|亿)(\s*)$/u;
+  const LIVE_GIFT_SELECTOR = '[data-e2e=gifts-container]';
+  const LIVE_RECHARGE_SELECTOR = '[data-e2e=recharge-btn]';
+  const LIVE_AUDIENCE_SELECTOR = '[data-e2e=live-room-audience]';
+  const LIVE_UI_LABELS = new Set([
+    '人气票',
+    '小心心',
+    '星河之钥',
+    '大啤酒',
+    '棒棒糖',
+    '给到夯',
+    '玫瑰',
+    '天作之合',
+    '鲜花',
+    '七夕快乐',
+    '心疼',
+    '更多',
+    '充值',
+    '在线观众',
+    '全部',
+    '高等级用户',
+  ]);
+  const LIVE_CONTRIBUTION_PATTERN = /^(\d[\d.,]*)贡献用户\((\d[\d.,]*)\)$/u;
+  const PLAYER_COUNT_PATTERN = /^(\s*\d[\d.,]*)(万|亿|钻)(\s*)$/u;
+  const COUNT_UNIT_TRANSLATIONS = Object.freeze({
+    '万': 'vạn',
+    '亿': 'tỷ',
+    '钻': 'kim cương',
+  });
 
   function normalizeText(value) {
     return typeof value === 'string' ? value.replace(/\s+/gu, ' ').trim() : '';
@@ -458,8 +521,22 @@
     }
 
     return value.replace(PLAYER_COUNT_PATTERN, (_, number, unit, trailingWhitespace) => (
-      `${number} ${unit === '万' ? 'vạn' : 'tỷ'}${trailingWhitespace}`
+      `${number} ${COUNT_UNIT_TRANSLATIONS[unit]}${trailingWhitespace}`
     ));
+  }
+
+  function translateLiveContribution(value) {
+    if (typeof value !== 'string') {
+      return value;
+    }
+
+    const normalized = normalizeText(value);
+    const match = normalized.match(LIVE_CONTRIBUTION_PATTERN);
+    if (!match) {
+      return value;
+    }
+
+    return replaceNormalizedText(value, `Người đóng góp ${match[1]} (${match[2]})`);
   }
 
   function translateSplitLiveEntryPrompt(element) {
@@ -729,6 +806,103 @@
     }
   }
 
+  function markLiveTranslatedUiElement(element) {
+    markTranslatedUiElement(element);
+    if (element && element.nodeType === 1 && typeof element.setAttribute === 'function') {
+      element.setAttribute(LIVE_TRANSLATED_ATTRIBUTE, 'true');
+    }
+  }
+
+  function getDescendantElements(element) {
+    if (!element || element.nodeType !== 1) {
+      return [];
+    }
+
+    const elements = [element];
+    if (typeof element.querySelectorAll === 'function') {
+      elements.push(...element.querySelectorAll('*'));
+    }
+    return elements;
+  }
+
+  function translateLiveLeafText(element) {
+    if (!element || element.nodeType !== 1 || isIgnoredElement(element)) {
+      return;
+    }
+
+    if (Number(element.childElementCount || 0) > 0) {
+      return;
+    }
+
+    const currentValue = element.textContent;
+    const normalizedValue = normalizeText(currentValue);
+    const isLiveLabel = LIVE_UI_LABELS.has(normalizedValue);
+    const isContribution = LIVE_CONTRIBUTION_PATTERN.test(normalizedValue);
+    const isCount = PLAYER_COUNT_PATTERN.test(currentValue);
+    if (!isLiveLabel && !isContribution && !isCount) {
+      return;
+    }
+
+    const translatedValue = isLiveLabel
+      ? translateExact(currentValue)
+      : isContribution
+        ? translateLiveContribution(currentValue)
+        : translatePlayerCount(currentValue);
+    if (translatedValue !== currentValue) {
+      element.textContent = translatedValue;
+      markLiveTranslatedUiElement(element);
+    }
+  }
+
+  function isLiveAudienceFilter(value) {
+    return value === '全部'
+      || value === '高等级用户'
+      || LIVE_CONTRIBUTION_PATTERN.test(value);
+  }
+
+  function findLiveAudienceFilterContainer(audienceCount) {
+    const audienceHeader = audienceCount?.parentElement;
+    const audiencePanel = audienceHeader?.parentElement;
+    if (!audiencePanel?.children) {
+      return null;
+    }
+
+    return Array.from(audiencePanel.children).find(child => (
+      getDescendantElements(child).some(element => (
+        Number(element.childElementCount || 0) === 0
+        && isLiveAudienceFilter(normalizeText(element.textContent))
+      ))
+    )) || null;
+  }
+
+  function scanLiveUi(documentObject) {
+    if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
+      return;
+    }
+
+    const scopedRoots = [
+      ...documentObject.querySelectorAll(LIVE_GIFT_SELECTOR),
+      ...documentObject.querySelectorAll(LIVE_RECHARGE_SELECTOR),
+    ];
+    for (const rootElement of scopedRoots) {
+      for (const element of getDescendantElements(rootElement)) {
+        translateLiveLeafText(element);
+      }
+    }
+
+    for (const audienceCount of documentObject.querySelectorAll(LIVE_AUDIENCE_SELECTOR)) {
+      const audienceHeader = audienceCount.parentElement;
+      for (const element of getDescendantElements(audienceHeader)) {
+        translateLiveLeafText(element);
+      }
+
+      const filterContainer = findLiveAudienceFilterContainer(audienceCount);
+      for (const element of getDescendantElements(filterContainer)) {
+        translateLiveLeafText(element);
+      }
+    }
+  }
+
   function scanPlayerUi(documentObject) {
     if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
       return;
@@ -845,6 +1019,7 @@
       if (documentObject?.documentElement) {
         scanNode(documentObject.documentElement, documentObject);
         scanPlayerUi(documentObject);
+        scanLiveUi(documentObject);
       }
     }
 
@@ -944,11 +1119,13 @@
     isGlobalUiLabel,
     translateExact,
     translatePlayerCount,
+    translateLiveContribution,
     translateProfileText,
     translateFooterText,
     translateTextNode,
     translatePlayerLeafText,
     scanPlayerUi,
+    scanLiveUi,
     isTextNodeAllowed,
     translateElementAttributes,
     createController,
