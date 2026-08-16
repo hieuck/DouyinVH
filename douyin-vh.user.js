@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.13
+// @version      0.9.14
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
+// @match        https://live.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
 // @downloadURL  https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
 // @run-at       document-idle
@@ -264,6 +265,8 @@
   });
 
   const SEARCH_STYLE_ID = 'douyin-vh-search-style';
+  const LIVE_DOUYIN_STYLE_ID = 'douyin-vh-live-domain-style';
+  const LIVE_DOUYIN_HOSTNAME = 'live.douyin.com';
   const NO_WRAP_ATTRIBUTE = 'data-douyin-vh-nowrap';
   const TRANSLATED_ATTRIBUTE = 'data-douyin-vh-translated';
   const LIVE_TRANSLATED_ATTRIBUTE = 'data-douyin-vh-live-translated';
@@ -354,6 +357,16 @@
       0x5bb9,
     ))
     .replace('__DOUYIN_VH_SEARCH_TRANSLATED__', SEARCH_PLACEHOLDER);
+
+  const LIVE_DOUYIN_STYLE_TEXT = [
+    '.LivePlayer_LivingPlayer,',
+    '.LivePlayer_LivingPlayer video {',
+    '  pointer-events: none !important;',
+    '}',
+    '.LivePlayer_LivingPlayer .douyin-player-controls {',
+    '  pointer-events: auto !important;',
+    '}',
+  ].join(String.fromCharCode(10));
 
   const SAFE_UI_SELECTOR = [
     'header',
@@ -1056,6 +1069,78 @@
     }
   }
 
+  function ensureLiveDouyinStyle(documentObject) {
+    if (!documentObject || typeof documentObject.createElement !== 'function') {
+      return;
+    }
+
+    let style = typeof documentObject.getElementById === 'function'
+      ? documentObject.getElementById(LIVE_DOUYIN_STYLE_ID)
+      : null;
+    if (!style) {
+      style = documentObject.createElement('style');
+      style.id = LIVE_DOUYIN_STYLE_ID;
+      const parent = documentObject.head || documentObject.documentElement;
+      if (!parent || typeof parent.appendChild !== 'function') {
+        return;
+      }
+      parent.appendChild(style);
+    }
+
+    style.textContent = LIVE_DOUYIN_STYLE_TEXT;
+  }
+
+  function removeLiveDouyinStyle(documentObject) {
+    if (!documentObject || typeof documentObject.getElementById !== 'function') {
+      return;
+    }
+
+    const style = documentObject.getElementById(LIVE_DOUYIN_STYLE_ID);
+    if (!style) {
+      return;
+    }
+
+    if (typeof style.remove === 'function') {
+      style.remove();
+    } else if (style.parentNode && typeof style.parentNode.removeChild === 'function') {
+      style.parentNode.removeChild(style);
+    }
+  }
+
+  function createLiveDouyinController(options = {}) {
+    const documentObject = options.document || root?.document;
+    let started = false;
+
+    const controller = {
+      start() {
+        if (started || !documentObject?.documentElement) {
+          return controller;
+        }
+
+        started = true;
+        ensureLiveDouyinStyle(documentObject);
+        return controller;
+      },
+
+      stop() {
+        removeLiveDouyinStyle(documentObject);
+        started = false;
+        return controller;
+      },
+
+      scan() {
+        ensureLiveDouyinStyle(documentObject);
+        return controller;
+      },
+
+      get started() {
+        return started;
+      },
+    };
+
+    return controller;
+  }
+
   function createController(options = {}) {
     const documentObject = options.document || root?.document;
     const MutationObserverConstructor = options.MutationObserver || root?.MutationObserver;
@@ -1151,11 +1236,15 @@
       return root.__douyinVHController;
     }
 
-    const controller = createController({
-      ...options,
-      document: options.document || root?.document,
-      MutationObserver: options.MutationObserver || root?.MutationObserver,
-    });
+    const controller = root?.location?.hostname === LIVE_DOUYIN_HOSTNAME
+      ? createLiveDouyinController({
+        document: options.document || root?.document,
+      })
+      : createController({
+        ...options,
+        document: options.document || root?.document,
+        MutationObserver: options.MutationObserver || root?.MutationObserver,
+      });
     root.__douyinVHController = controller.start();
     return root.__douyinVHController;
   }
@@ -1174,6 +1263,10 @@
       id: SEARCH_STYLE_ID,
       text: SEARCH_STYLE_TEXT,
     }),
+    liveDouyinStyle: Object.freeze({
+      id: LIVE_DOUYIN_STYLE_ID,
+      text: LIVE_DOUYIN_STYLE_TEXT,
+    }),
     normalizeText,
     isGlobalUiLabel,
     translateExact,
@@ -1188,6 +1281,7 @@
     isTextNodeAllowed,
     translateElementAttributes,
     createController,
+    createLiveDouyinController,
     start,
     stop,
   });

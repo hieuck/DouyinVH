@@ -30,6 +30,15 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('!important'), true);
 });
 
+test('exposes non-layout pass-through styling for live.douyin player', () => {
+  assert.equal(douyinVH.liveDouyinStyle.text.includes('.LivePlayer_LivingPlayer'), true);
+  assert.equal(douyinVH.liveDouyinStyle.text.includes('pointer-events: none !important'), true);
+  assert.equal(douyinVH.liveDouyinStyle.text.includes('.douyin-player-controls'), true);
+  assert.equal(douyinVH.liveDouyinStyle.text.includes('pointer-events: auto !important'), true);
+  assert.equal(douyinVH.liveDouyinStyle.text.includes('position:'), false);
+  assert.equal(douyinVH.liveDouyinStyle.text.includes('z-index:'), false);
+});
+
 test('marks translated popup-trigger labels so fixed navigation cells do not wrap', () => {
   const popupAttributes = new Map([
     ['data-popupid', 'wallpaper'],
@@ -442,6 +451,45 @@ test('adds and removes compact search styling with the controller lifecycle', ()
 
   assert.equal(styles.size, 1);
   assert.equal(styles.get(douyinVH.searchStyle.id).textContent, douyinVH.searchStyle.text);
+
+  controller.stop();
+
+  assert.equal(styles.size, 0);
+});
+
+test('adds and removes live.douyin pass-through styling with its lifecycle', () => {
+  const styles = new Map();
+  const head = {
+    appendChild(style) {
+      style.parentNode = this;
+      styles.set(style.id, style);
+    },
+    removeChild(style) {
+      styles.delete(style.id);
+      style.parentNode = null;
+    },
+  };
+  const documentObject = {
+    documentElement: {},
+    head,
+    getElementById(id) {
+      return styles.get(id) || null;
+    },
+    createElement(tagName) {
+      return {
+        tagName: tagName.toUpperCase(),
+        remove() {
+          head.removeChild(this);
+        },
+      };
+    },
+  };
+
+  const controller = douyinVH.createLiveDouyinController({ document: documentObject });
+  controller.start();
+
+  assert.equal(styles.size, 1);
+  assert.equal(styles.get(douyinVH.liveDouyinStyle.id).textContent, douyinVH.liveDouyinStyle.text);
 
   controller.stop();
 
