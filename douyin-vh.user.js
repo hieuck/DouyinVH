@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.12
+// @version      0.9.13
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -339,7 +339,7 @@
      '  z-index: 10000 !important;',
      '}',
      `body:has([${LIVE_ROOT_ATTRIBUTE}=true]) > .i5Ej1sWo {`,
-     '  z-index: 0 !important;',
+     '  z-index: auto !important;',
      '}',
    ].join(String.fromCharCode(10))
     .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(

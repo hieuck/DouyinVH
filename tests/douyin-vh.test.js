@@ -21,6 +21,8 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-live-translated]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-live-layer]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('z-index: 10000'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('z-index: auto !important'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('z-index: 0 !important'), false);
   assert.equal(douyinVH.searchStyle.text.includes('word-break: keep-all'), true);
   assert.equal(douyinVH.searchStyle.text.includes('font-size: 10px'), true);
   assert.equal(douyinVH.searchStyle.text.includes('Segoe UI'), true);
