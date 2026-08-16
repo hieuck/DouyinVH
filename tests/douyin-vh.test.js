@@ -543,6 +543,42 @@ test('translates lower settings and support popup labels', () => {
   }
 });
 
+test('translates upper-right application and notification popup labels', () => {
+  const expectedTranslations = {
+    '下载电脑客户端': 'Tải ứng dụng máy tính',
+    '互动消息': 'Thông báo tương tác',
+    '全部消息': 'Tất cả thông báo',
+    '赞了你的评论': 'Đã thích bình luận của bạn',
+    '回复了你的评论': 'Đã trả lời bình luận của bạn',
+    '暂时没有更多了': 'Không còn thông báo nào',
+    '对方回复或关注你之前，只能发送一条文字消息。请礼貌发言，自觉遵守《抖音自律公约》': 'Trước khi đối phương trả lời hoặc theo dõi bạn, bạn chỉ có thể gửi một tin nhắn văn bản. Vui lòng phát biểu lịch sự và tự giác tuân thủ “Quy ước tự quản Douyin”.',
+  };
+
+  for (const [source, expected] of Object.entries(expectedTranslations)) {
+    assert.equal(douyinVH.translateExact(source), expected, source);
+  }
+
+  const popupTextNodes = Object.keys(expectedTranslations).map(source => ({
+    nodeType: 3,
+    nodeValue: source,
+    parentElement: {
+      tagName: 'DIV',
+      closest() {
+        return null;
+      },
+    },
+  }));
+
+  for (const textNode of popupTextNodes) {
+    douyinVH.translateTextNode(textNode);
+  }
+
+  assert.deepEqual(
+    popupTextNodes.map(textNode => textNode.nodeValue),
+    Object.values(expectedTranslations),
+  );
+});
+
 test('translates the final about and creator-services popup', () => {
   const expectedTranslations = {
     '关于抖音': 'Về Douyin',

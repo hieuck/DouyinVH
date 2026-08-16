@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.6
+// @version      0.9.7
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -80,9 +80,16 @@
     '搜索你感兴趣的内容': 'Tìm nội dung bạn quan tâm',
     '充钻石': 'Nạp kim cương',
     '客户端': 'Ứng dụng máy tính',
+    '下载电脑客户端': 'Tải ứng dụng máy tính',
     '壁纸': 'Hình nền',
     '通知': 'Thông báo',
     '消息': 'Tin nhắn',
+    '互动消息': 'Thông báo tương tác',
+    '全部消息': 'Tất cả thông báo',
+    '赞了你的评论': 'Đã thích bình luận của bạn',
+    '回复了你的评论': 'Đã trả lời bình luận của bạn',
+    '暂时没有更多了': 'Không còn thông báo nào',
+    '对方回复或关注你之前，只能发送一条文字消息。请礼貌发言，自觉遵守《抖音自律公约》': 'Trước khi đối phương trả lời hoặc theo dõi bạn, bạn chỉ có thể gửi một tin nhắn văn bản. Vui lòng phát biểu lịch sự và tự giác tuân thủ “Quy ước tự quản Douyin”.',
     '投稿': 'Đăng bài',
     '听抖音': 'Nghe Douyin',
     '倍速': 'Tốc độ',
@@ -376,6 +383,13 @@
     '读屏标签已关闭',
     '你的关注',
     '共创',
+    '下载电脑客户端',
+    '互动消息',
+    '全部消息',
+    '赞了你的评论',
+    '回复了你的评论',
+    '暂时没有更多了',
+    '对方回复或关注你之前，只能发送一条文字消息。请礼貌发言，自觉遵守《抖音自律公约》',
   ]);
   const PLAYER_UI_SELECTOR = [
     '[class*=modalPlayer]',
