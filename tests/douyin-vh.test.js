@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
 const douyinVH = require('../douyin-vh.user.js');
 
 test('translates an exact UI label while preserving surrounding whitespace', () => {
@@ -83,4 +85,75 @@ test('translates the recommendation topic tabs and accessibility labels', () => 
   for (const [source, expected] of Object.entries(expectedTranslations)) {
     assert.equal(douyinVH.translateExact(source), expected, source);
   }
+});
+
+test('translates combined topic tabs and exact system badges outside standard UI regions', () => {
+  assert.equal(douyinVH.translateExact('生活vlog'), 'Đời sống vlog');
+  assert.equal(douyinVH.translateExact('美妆穿搭'), 'Làm đẹp và thời trang');
+  assert.equal(douyinVH.translateExact('你的关注'), 'Đang theo dõi');
+  assert.equal(douyinVH.translateExact('共创'), 'Đồng sáng tạo');
+  assert.equal(douyinVH.isGlobalUiLabel('读屏标签已关闭'), true);
+  assert.equal(douyinVH.isGlobalUiLabel('caption của người dùng'), false);
+});
+
+test('starts in a browser page even when a CommonJS-like module global exists', () => {
+  const source = fs.readFileSync(require.resolve('../douyin-vh.user.js'), 'utf8');
+  const documentElement = {
+    nodeType: 1,
+    tagName: 'HTML',
+    closest() {
+      return null;
+    },
+    querySelectorAll() {
+      return [];
+    },
+  };
+  const page = {
+    document: {
+      documentElement,
+      createTreeWalker() {
+        return { nextNode: () => null };
+      },
+    },
+    module: { exports: { sentinel: true } },
+  };
+  page.window = page;
+  page.globalThis = page;
+
+  vm.runInNewContext(source, page);
+
+  assert.equal(page.__douyinVHController.started, true);
+  assert.deepEqual(page.module.exports, { sentinel: true });
+});
+
+test('uses window as the browser root when globalThis is an isolated realm', () => {
+  const source = fs.readFileSync(require.resolve('../douyin-vh.user.js'), 'utf8');
+  const documentElement = {
+    nodeType: 1,
+    tagName: 'HTML',
+    closest() {
+      return null;
+    },
+    querySelectorAll() {
+      return [];
+    },
+  };
+  const windowObject = {
+    document: {
+      documentElement,
+      createTreeWalker() {
+        return { nextNode: () => null };
+      },
+    },
+  };
+  windowObject.window = windowObject;
+  const realm = {
+    window: windowObject,
+    module: { exports: { sentinel: true } },
+  };
+  realm.globalThis = realm;
+
+  vm.runInNewContext(source, realm);
+
+  assert.equal(windowObject.__douyinVHController.started, true);
 });

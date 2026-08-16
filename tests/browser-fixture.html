@@ -5,6 +5,8 @@
   <title>DouyinVH Browser Fixture</title>
 </head>
 <body>
+  <div id=screen-reader-status>读屏标签已关闭</div>
+
   <header>
     <nav>
       <button>推荐</button>
@@ -12,6 +14,14 @@
       <input placeholder=搜索>
     </nav>
   </header>
+
+  <div role=tablist>
+    <div role=tab>生活vlog</div>
+    <div role=tab>美妆穿搭</div>
+  </div>
+
+  <div id=following-badge>你的关注</div>
+  <div id=co-create-badge>共创</div>
 
   <section id=player>
     <button>清屏</button>
@@ -26,7 +36,7 @@
 
   <div id=dynamic></div>
 
-  <script src=../douyin-vh.user.js></script>
+  <script src=../douyin-vh.user.js?fixture=browser2></script>
   <script>
     setTimeout(() => {
       const button = document.createElement('button');

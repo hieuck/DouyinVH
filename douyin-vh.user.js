@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.2.1
+// @version      0.3.0
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://github.com/hieuck/DouyinVH/raw/refs/heads/main/douyin-vh.user.js
@@ -12,12 +12,19 @@
 
 (function bootstrap(root, factory) {
   const api = factory(root);
-  if (typeof module === 'object' && module.exports) {
+  const isCommonJsRuntime = typeof module === 'object'
+    && module.exports
+    && typeof window === 'undefined';
+  if (isCommonJsRuntime) {
     module.exports = api;
   } else {
     api.start();
   }
-}(typeof globalThis === 'object' ? globalThis : this, function createApi(root) {
+}(typeof window === 'object'
+  ? window
+  : typeof globalThis === 'object'
+    ? globalThis
+    : this, function createApi(root) {
   'use strict';
 
   const translations = Object.freeze({
@@ -41,6 +48,7 @@
     '知识': 'Kiến thức',
     '小剧场': 'Sân khấu nhỏ',
     '生活': 'Đời sống',
+    '生活vlog': 'Đời sống vlog',
     '体育': 'Thể thao',
     '旅行': 'Du lịch',
     '亲子': 'Gia đình',
@@ -49,6 +57,7 @@
     '汽车': 'Ô tô',
     '美妆': 'Làm đẹp',
     '穿搭': 'Thời trang',
+    '美妆穿搭': 'Làm đẹp và thời trang',
     '搜索': 'Tìm kiếm',
     '充钻石': 'Nạp kim cương',
     '客户端': 'Ứng dụng máy tính',
@@ -144,6 +153,9 @@
     '评论和@': 'Bình luận và @',
     '开启读屏标签': 'Bật nhãn đọc màn hình',
     '读屏标签已关闭': 'Nhãn đọc màn hình đã tắt',
+    '你的关注': 'Đang theo dõi',
+    '共创': 'Đồng sáng tạo',
+    '正在直播': 'Đang phát trực tiếp',
   });
 
   const SAFE_UI_SELECTOR = [
@@ -187,9 +199,19 @@
 
   const IGNORED_TAGS = new Set(['script', 'style', 'noscript', 'template', 'svg']);
   const UI_ATTRIBUTES = Object.freeze(['title', 'aria-label', 'placeholder']);
+  const GLOBAL_UI_LABELS = new Set([
+    '开启读屏标签',
+    '读屏标签已关闭',
+    '你的关注',
+    '共创',
+  ]);
 
   function normalizeText(value) {
     return typeof value === 'string' ? value.replace(/\s+/gu, ' ').trim() : '';
+  }
+
+  function isGlobalUiLabel(value) {
+    return GLOBAL_UI_LABELS.has(normalizeText(value));
   }
 
   function translateExact(value) {
@@ -262,7 +284,7 @@
       return;
     }
 
-    if (!isTextNodeAllowed(getElementContext(parentElement))) {
+    if (!isTextNodeAllowed(getElementContext(parentElement)) && !isGlobalUiLabel(currentValue)) {
       return;
     }
 
@@ -441,6 +463,7 @@
   return Object.freeze({
     translations,
     normalizeText,
+    isGlobalUiLabel,
     translateExact,
     isTextNodeAllowed,
     translateElementAttributes,
