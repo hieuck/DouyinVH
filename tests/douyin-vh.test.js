@@ -20,6 +20,7 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-translated]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-live-translated]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('word-break: keep-all'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('font-size: 10px'), true);
   assert.equal(douyinVH.searchStyle.text.includes('Segoe UI'), true);
   assert.equal(douyinVH.searchStyle.text.includes('font-kerning: normal'), true);
   assert.equal(douyinVH.searchStyle.text.includes('!important'), true);
@@ -344,14 +345,14 @@ test('translates livestream gifts, recharge and audience filters without scannin
     [
       'Vé phổ biến',
       'Tim nhỏ',
-      'Chìa khóa ngân hà',
+      'Chìa ngân hà',
       'Bia lớn',
       'Kẹo mút',
       'Đủ lực',
       'Hoa hồng',
-      'Trời sinh một cặp',
+      'Duyên trời',
       'Hoa tươi',
-      'Thất Tịch vui vẻ',
+      'Vui Thất Tịch',
       'Thương quá',
       '2 kim cương',
     ],
@@ -360,7 +361,7 @@ test('translates livestream gifts, recharge and audience filters without scannin
   assert.equal(audienceLabel.textContent, 'Người xem trực tuyến');
   assert.deepEqual(
     audienceFilters.children.map(node => node.textContent),
-    ['Tất cả', 'Người đóng góp 1000 (0)', 'Người dùng cấp cao'],
+    ['Tất cả', 'Đóng góp 1000 (0)', 'Cấp cao'],
   );
 });
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.9
+// @version      0.9.10
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -87,7 +87,7 @@
     '通知': 'Thông báo',
     '消息': 'Tin nhắn',
     '在线观众': 'Người xem trực tuyến',
-    '高等级用户': 'Người dùng cấp cao',
+    '高等级用户': 'Cấp cao',
     '互动消息': 'Thông báo tương tác',
     '全部消息': 'Tất cả thông báo',
     '赞了你的评论': 'Đã thích bình luận của bạn',
@@ -148,14 +148,14 @@
     '更多': 'Thêm',
     '人气票': 'Vé phổ biến',
     '小心心': 'Tim nhỏ',
-    '星河之钥': 'Chìa khóa ngân hà',
+    '星河之钥': 'Chìa ngân hà',
     '大啤酒': 'Bia lớn',
     '棒棒糖': 'Kẹo mút',
     '给到夯': 'Đủ lực',
     '玫瑰': 'Hoa hồng',
-    '天作之合': 'Trời sinh một cặp',
+    '天作之合': 'Duyên trời',
     '鲜花': 'Hoa tươi',
-    '七夕快乐': 'Thất Tịch vui vẻ',
+    '七夕快乐': 'Vui Thất Tịch',
     '心疼': 'Thương quá',
     '加载中': 'Đang tải',
     '暂无内容': 'Chưa có nội dung',
@@ -311,24 +311,27 @@
     '  min-width: max-content !important;',
     '  max-width: none !important;',
     '  flex-shrink: 0 !important;',
-     '  word-break: keep-all !important;',
-     '}',
-      `[${TRANSLATED_ATTRIBUTE}] {`,
-      '  font-family: Segoe UI, Tahoma, Arial, sans-serif !important;',
-      '  font-kerning: normal !important;',
-      '  font-variant-ligatures: normal !important;',
-      '  letter-spacing: normal !important;',
-      '  word-spacing: normal !important;',
-      '}',
-      `[${LIVE_TRANSLATED_ATTRIBUTE}] {`,
-      '  font-family: Segoe UI, Tahoma, Arial, sans-serif !important;',
-      '  font-kerning: normal !important;',
-      '  font-variant-ligatures: normal !important;',
-      '  letter-spacing: normal !important;',
-      '  word-spacing: normal !important;',
-      '  white-space: nowrap !important;',
-      '  word-break: keep-all !important;',
-      '}',
+    '  word-break: keep-all !important;',
+    '}',
+    `[${TRANSLATED_ATTRIBUTE}] {`,
+    '  font-family: Segoe UI, Tahoma, Arial, sans-serif !important;',
+    '  font-kerning: normal !important;',
+    '  font-variant-ligatures: normal !important;',
+    '  letter-spacing: normal !important;',
+    '  word-spacing: normal !important;',
+    '}',
+    `[${LIVE_TRANSLATED_ATTRIBUTE}] {`,
+    '  font-family: Segoe UI, Tahoma, Arial, sans-serif !important;',
+    '  font-kerning: normal !important;',
+    '  font-variant-ligatures: normal !important;',
+    '  letter-spacing: normal !important;',
+    '  word-spacing: normal !important;',
+    '  white-space: nowrap !important;',
+    '  word-break: keep-all !important;',
+    '}',
+    `[data-e2e=gifts-container] [${LIVE_TRANSLATED_ATTRIBUTE}] {`,
+    '  font-size: 10px !important;',
+    '}',
    ].join(String.fromCharCode(10))
     .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(
       0x641c,
@@ -536,7 +539,7 @@
       return value;
     }
 
-    return replaceNormalizedText(value, `Người đóng góp ${match[1]} (${match[2]})`);
+    return replaceNormalizedText(value, `Đóng góp ${match[1]} (${match[2]})`);
   }
 
   function translateSplitLiveEntryPrompt(element) {
