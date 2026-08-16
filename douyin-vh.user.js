@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.7
+// @version      0.9.8
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -398,6 +398,7 @@
     '[data-e2e=feed-live]',
     '[data-e2e=chapter-container]',
     '[class*=chapterVideoCard]',
+    '[class*=LivePlayer]',
   ].join(',');
   const PLAYER_UI_LABELS = new Set([
     '发送',
@@ -459,6 +460,27 @@
     return value.replace(PLAYER_COUNT_PATTERN, (_, number, unit, trailingWhitespace) => (
       `${number} ${unit === '万' ? 'vạn' : 'tỷ'}${trailingWhitespace}`
     ));
+  }
+
+  function translateSplitLiveEntryPrompt(element) {
+    if (!element || element.nodeType !== 1 || !element.childNodes) {
+      return;
+    }
+
+    const textNodes = Array.from(element.childNodes).filter(node => node.nodeType === 3);
+    const sourceValues = textNodes.map(node => normalizeText(node.nodeValue));
+    if (
+      sourceValues.length !== 4
+      || sourceValues.join('') !== '点击或按进入直播间'
+    ) {
+      return;
+    }
+
+    const translatedValues = ['Nhấp', ' hoặc nhấn ', ' để vào', ' phòng livestream'];
+    for (let index = 0; index < textNodes.length; index += 1) {
+      textNodes[index].nodeValue = translatedValues[index];
+    }
+    markTranslatedUiElement(element);
   }
 
   function replaceNormalizedText(value, replacement) {
@@ -720,6 +742,7 @@
       }
 
       for (const element of elements) {
+        translateSplitLiveEntryPrompt(element);
         translatePlayerLeafText(element);
       }
     }

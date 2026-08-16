@@ -180,6 +180,66 @@ test('translates player action labels and Chinese count units', () => {
   assert.equal(douyinVH.translatePlayerCount('  39.8万  '), '  39.8 vạn  ');
 });
 
+test('translates split livestream entry prompt around the F key hint', () => {
+  const attributes = new Map();
+  const promptTextNodes = ['点击', '或按', '进入', '直播间'].map(value => ({
+    nodeType: 3,
+    nodeValue: value,
+  }));
+  const keyHint = {
+    nodeType: 1,
+    tagName: 'DIV',
+    childElementCount: 0,
+    textContent: '',
+    parentElement: null,
+  };
+  const prompt = {
+    nodeType: 1,
+    tagName: 'DIV',
+    childElementCount: 1,
+    childNodes: [promptTextNodes[0], promptTextNodes[1], keyHint, promptTextNodes[2], promptTextNodes[3]],
+    parentElement: null,
+    setAttribute(name, value) {
+      attributes.set(name, value);
+    },
+    closest() {
+      return null;
+    },
+  };
+  for (const textNode of promptTextNodes) {
+    textNode.parentElement = prompt;
+  }
+  keyHint.parentElement = prompt;
+
+  const liveRoot = {
+    nodeType: 1,
+    tagName: 'DIV',
+    childElementCount: 1,
+    childNodes: [],
+    closest() {
+      return null;
+    },
+    querySelectorAll(selector) {
+      assert.equal(selector, '*');
+      return [prompt];
+    },
+  };
+  const documentObject = {
+    querySelectorAll(selector) {
+      assert.match(selector, /LivePlayer/u);
+      return [liveRoot];
+    },
+  };
+
+  douyinVH.scanPlayerUi(documentObject);
+
+  assert.deepEqual(
+    promptTextNodes.map(textNode => textNode.nodeValue),
+    ['Nhấp', ' hoặc nhấn ', ' để vào', ' phòng livestream'],
+  );
+  assert.equal(attributes.get('data-douyin-vh-translated'), 'true');
+});
+
 test('adds and removes compact search styling with the controller lifecycle', () => {
   const styles = new Map();
   const head = {
