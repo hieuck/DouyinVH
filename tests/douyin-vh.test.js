@@ -141,6 +141,45 @@ test('translates leaf labels rendered inside dynamic video players', () => {
   );
 });
 
+test('translates player action labels and Chinese count units', () => {
+  const leafNodes = ['点赞', '评论', '收藏', '分享', '39.8万', '1.2亿', '3055'].map(value => ({
+    nodeType: 1,
+    tagName: 'SPAN',
+    childElementCount: 0,
+    textContent: value,
+    closest() {
+      return null;
+    },
+  }));
+  const playerRoot = {
+    nodeType: 1,
+    tagName: 'DIV',
+    childElementCount: leafNodes.length,
+    closest() {
+      return null;
+    },
+    querySelectorAll(selector) {
+      if (selector !== '*') {
+        assert.match(selector, /basePlayerContainer/u);
+      }
+      return leafNodes;
+    },
+  };
+  const documentObject = {
+    querySelectorAll() {
+      return [playerRoot];
+    },
+  };
+
+  douyinVH.scanPlayerUi(documentObject);
+
+  assert.deepEqual(
+    leafNodes.map(node => node.textContent),
+    ['Thích', 'Bình luận', 'Lưu', 'Chia sẻ', '39.8 vạn', '1.2 tỷ', '3055'],
+  );
+  assert.equal(douyinVH.translatePlayerCount('  39.8万  '), '  39.8 vạn  ');
+});
+
 test('adds and removes compact search styling with the controller lifecycle', () => {
   const styles = new Map();
   const head = {

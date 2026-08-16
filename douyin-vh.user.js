@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.5
+// @version      0.9.6
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -395,7 +395,13 @@
     '下一章',
     '点击推荐',
     '消息',
+    '点赞',
+    '已赞',
     '评论',
+    '评论区',
+    '收藏',
+    '已收藏',
+    '分享',
     '详情',
     'TA的作品',
     '相关推荐',
@@ -408,6 +414,7 @@
     '引言',
     '音乐特点',
   ]);
+  const PLAYER_COUNT_PATTERN = /^(\s*\d[\d.,]*)(万|亿)(\s*)$/u;
 
   function normalizeText(value) {
     return typeof value === 'string' ? value.replace(/\s+/gu, ' ').trim() : '';
@@ -428,6 +435,16 @@
     }
 
     return replaceNormalizedText(value, translations[normalized]);
+  }
+
+  function translatePlayerCount(value) {
+    if (typeof value !== 'string') {
+      return value;
+    }
+
+    return value.replace(PLAYER_COUNT_PATTERN, (_, number, unit, trailingWhitespace) => (
+      `${number} ${unit === '万' ? 'vạn' : 'tỷ'}${trailingWhitespace}`
+    ));
   }
 
   function replaceNormalizedText(value, replacement) {
@@ -662,11 +679,14 @@
     }
 
     const currentValue = element.textContent;
-    if (!PLAYER_UI_LABELS.has(normalizeText(currentValue))) {
+    const normalizedValue = normalizeText(currentValue);
+    if (!PLAYER_UI_LABELS.has(normalizedValue) && !PLAYER_COUNT_PATTERN.test(currentValue)) {
       return;
     }
 
-    const translatedValue = translateExact(currentValue);
+    const translatedValue = PLAYER_UI_LABELS.has(normalizedValue)
+      ? translateExact(currentValue)
+      : translatePlayerCount(currentValue);
     if (translatedValue !== currentValue) {
       element.textContent = translatedValue;
       markTranslatedUiElement(element);
@@ -886,6 +906,7 @@
     normalizeText,
     isGlobalUiLabel,
     translateExact,
+    translatePlayerCount,
     translateProfileText,
     translateFooterText,
     translateTextNode,
