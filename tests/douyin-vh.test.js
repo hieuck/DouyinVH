@@ -7,6 +7,61 @@ const douyinVH = require('../douyin-vh.user.js');
 test('translates an exact UI label while preserving surrounding whitespace', () => {
   assert.equal(douyinVH.translateExact('  推荐  '), '  Đề xuất  ');
 });
+test('exposes compact search styling', () => {
+  assert.equal(douyinVH.searchStyle.text.includes('搜索你感兴趣的内容'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('Tìm nội dung bạn quan tâm'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('font-size: 14px'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('!important'), true);
+});
+
+test('adds and removes compact search styling with the controller lifecycle', () => {
+  const styles = new Map();
+  const head = {
+    appendChild(style) {
+      style.parentNode = this;
+      styles.set(style.id, style);
+    },
+    removeChild(style) {
+      styles.delete(style.id);
+      style.parentNode = null;
+    },
+  };
+  const documentObject = {
+    documentElement: {
+      nodeType: 1,
+      tagName: 'HTML',
+      querySelectorAll() {
+        return [];
+      },
+    },
+    head,
+    getElementById(id) {
+      return styles.get(id) || null;
+    },
+    createElement(tagName) {
+      return {
+        tagName: tagName.toUpperCase(),
+        setAttribute() {},
+        remove() {
+          head.removeChild(this);
+        },
+      };
+    },
+    createTreeWalker() {
+      return { nextNode: () => null };
+    },
+  };
+
+  const controller = douyinVH.createController({ document: documentObject });
+  controller.start();
+
+  assert.equal(styles.size, 1);
+  assert.equal(styles.get(douyinVH.searchStyle.id).textContent, douyinVH.searchStyle.text);
+
+  controller.stop();
+
+  assert.equal(styles.size, 0);
+});
 
 test('does not translate unknown or embedded user content', () => {
   assert.equal(douyinVH.translateExact('推荐这条视频'), '推荐这条视频');
@@ -28,8 +83,34 @@ test('allows interactive controls inside a player but blocks ordinary feed conte
 
 test('exposes translations observed in the Douyin shell', () => {
   assert.equal(douyinVH.translations['搜索'], 'Tìm kiếm');
+  assert.equal(douyinVH.translations['搜索你感兴趣的内容'], 'Tìm nội dung bạn quan tâm');
   assert.equal(douyinVH.translations['清屏'], 'Xóa màn hình');
   assert.equal(douyinVH.translations['连播'], 'Phát liên tục');
+});
+
+test('translates system labels in the chapter video modal', () => {
+  const expectedTranslations = {
+    '手机随时看更方便': 'Xem tiện hơn trên điện thoại',
+    '下载 APP': 'Tải ứng dụng',
+    '下一章': 'Chương tiếp theo',
+    '详情': 'Chi tiết',
+    'TA的作品': 'Tác phẩm của họ',
+    '相关推荐': 'Đề xuất liên quan',
+    '章节要点': 'Điểm chính của chương',
+    '内容由AI生成': 'Nội dung do AI tạo',
+    '点击推荐': 'Nhấn để đề xuất',
+    '引言': 'Mở đầu',
+    '音乐特点': 'Đặc điểm âm nhạc',
+  };
+
+  for (const [source, expected] of Object.entries(expectedTranslations)) {
+    assert.equal(douyinVH.translateExact(source), expected, source);
+  }
+
+  assert.equal(
+    douyinVH.translateExact('第2章：蜜璃的特殊体质'),
+    '第2章：蜜璃的特殊体质',
+  );
 });
 
 test('translates UI attributes on descendant controls', () => {

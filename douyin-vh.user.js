@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.8.1
+// @version      0.9.0
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -54,6 +54,8 @@
     '站点地图': 'Sơ đồ trang web',
     '下载抖音': 'Tải Douyin',
     '抖音电商': 'Thương mại điện tử Douyin',
+    '手机随时看更方便': 'Xem tiện hơn trên điện thoại',
+    '下载 APP': 'Tải ứng dụng',
     '全部': 'Tất cả',
     '公开课': 'Khóa học mở',
     '游戏': 'Trò chơi',
@@ -75,6 +77,7 @@
     '穿搭': 'Thời trang',
     '美妆穿搭': 'Làm đẹp và thời trang',
     '搜索': 'Tìm kiếm',
+    '搜索你感兴趣的内容': 'Tìm nội dung bạn quan tâm',
     '充钻石': 'Nạp kim cương',
     '客户端': 'Ứng dụng máy tính',
     '壁纸': 'Hình nền',
@@ -88,6 +91,15 @@
     '清屏': 'Xóa màn hình',
     '连播': 'Phát liên tục',
     '发送': 'Gửi',
+    '下一章': 'Chương tiếp theo',
+    '详情': 'Chi tiết',
+    'TA的作品': 'Tác phẩm của họ',
+    '相关推荐': 'Đề xuất liên quan',
+    '章节要点': 'Điểm chính của chương',
+    '内容由AI生成': 'Nội dung do AI tạo',
+    '点击推荐': 'Nhấn để đề xuất',
+    '引言': 'Mở đầu',
+    '音乐特点': 'Đặc điểm âm nhạc',
     '点赞': 'Thích',
     '已赞': 'Đã thích',
     '评论': 'Bình luận',
@@ -221,6 +233,37 @@
     '正在直播': 'Đang phát trực tiếp',
   });
 
+  const SEARCH_STYLE_ID = 'douyin-vh-search-style';
+  const SEARCH_PLACEHOLDER = translations[String.fromCodePoint(
+    0x641c,
+    0x7d22,
+    0x4f60,
+    0x611f,
+    0x5174,
+    0x8da3,
+    0x7684,
+    0x5185,
+    0x5bb9,
+  )];
+  const SEARCH_STYLE_TEXT = [
+    `input[placeholder='__DOUYIN_VH_SEARCH_SOURCE__'],`,
+    `input[placeholder='__DOUYIN_VH_SEARCH_TRANSLATED__'] {`,
+    '  font-size: 14px !important;',
+    '}',
+  ].join(String.fromCharCode(10))
+    .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(
+      0x641c,
+      0x7d22,
+      0x4f60,
+      0x611f,
+      0x5174,
+      0x8da3,
+      0x7684,
+      0x5185,
+      0x5bb9,
+    ))
+    .replace('__DOUYIN_VH_SEARCH_TRANSLATED__', SEARCH_PLACEHOLDER);
+
   const SAFE_UI_SELECTOR = [
     'header',
     'nav',
@@ -244,6 +287,10 @@
     '[class*=trust-login-switch]',
     '[class*=user-post-list]',
     '[class*=coopPanel]',
+    '[data-e2e=chapter-container]',
+    '[class*=chapterContainer]',
+    '[class*=chapterVideoCard]',
+    '[class*=modalPlayer]',
   ].join(',');
 
   const PROFILE_USER_INFO_SELECTOR = '[data-e2e=user-info], [class*=user-info]';
@@ -538,6 +585,44 @@
     }
   }
 
+  function ensureSearchStyle(documentObject) {
+    if (!documentObject || typeof documentObject.createElement !== 'function') {
+      return;
+    }
+
+    let style = typeof documentObject.getElementById === 'function'
+      ? documentObject.getElementById(SEARCH_STYLE_ID)
+      : null;
+    if (!style) {
+      style = documentObject.createElement('style');
+      style.id = SEARCH_STYLE_ID;
+      const parent = documentObject.head || documentObject.documentElement;
+      if (!parent || typeof parent.appendChild !== 'function') {
+        return;
+      }
+      parent.appendChild(style);
+    }
+
+    style.textContent = SEARCH_STYLE_TEXT;
+  }
+
+  function removeSearchStyle(documentObject) {
+    if (!documentObject || typeof documentObject.getElementById !== 'function') {
+      return;
+    }
+
+    const style = documentObject.getElementById(SEARCH_STYLE_ID);
+    if (!style) {
+      return;
+    }
+
+    if (typeof style.remove === 'function') {
+      style.remove();
+    } else if (style.parentNode && typeof style.parentNode.removeChild === 'function') {
+      style.parentNode.removeChild(style);
+    }
+  }
+
   function createController(options = {}) {
     const documentObject = options.document || root?.document;
     const MutationObserverConstructor = options.MutationObserver || root?.MutationObserver;
@@ -579,6 +664,7 @@
         }
 
         started = true;
+        ensureSearchStyle(documentObject);
         scan();
 
         if (typeof MutationObserverConstructor === 'function') {
@@ -610,6 +696,7 @@
           cancel(timer);
           timer = null;
         }
+        removeSearchStyle(documentObject);
         started = false;
         return controller;
       },
@@ -648,6 +735,10 @@
 
   return Object.freeze({
     translations,
+    searchStyle: Object.freeze({
+      id: SEARCH_STYLE_ID,
+      text: SEARCH_STYLE_TEXT,
+    }),
     normalizeText,
     isGlobalUiLabel,
     translateExact,
