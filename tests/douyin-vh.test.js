@@ -296,6 +296,27 @@ test('translates lower settings and support popup labels', () => {
   }
 });
 
+test('translates the final about and creator-services popup', () => {
+  const expectedTranslations = {
+    '关于抖音': 'Về Douyin',
+    '官方网站': 'Trang web chính thức',
+    '关于我们': 'Về chúng tôi',
+    '规则中心': 'Trung tâm quy tắc',
+    '创作服务': 'Dịch vụ sáng tạo',
+    '身份认证': 'Xác minh danh tính',
+    'MCN入驻': 'Đăng ký MCN',
+    '社会机构入驻': 'Đăng ký tổ chức xã hội',
+    '安全与信任中心': 'Trung tâm an toàn và tin cậy',
+    '抖音直播伴侣': 'Trợ lý livestream Douyin',
+    '生活服务': 'Dịch vụ đời sống',
+    '开放平台': 'Nền tảng mở',
+  };
+
+  for (const [source, expected] of Object.entries(expectedTranslations)) {
+    assert.equal(douyinVH.translateExact(source), expected, source);
+  }
+});
+
 test('starts in a browser page even when a CommonJS-like module global exists', () => {
   const source = fs.readFileSync(require.resolve('../douyin-vh.user.js'), 'utf8');
   const documentElement = {

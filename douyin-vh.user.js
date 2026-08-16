@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.7.0
+// @version      0.8.0
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://github.com/hieuck/DouyinVH/raw/refs/heads/main/douyin-vh.user.js
@@ -172,6 +172,18 @@
     '键盘快捷键': 'Phím tắt',
     '常见问题': 'Câu hỏi thường gặp',
     '我的客服': 'Dịch vụ khách hàng',
+    '关于抖音': 'Về Douyin',
+    '官方网站': 'Trang web chính thức',
+    '关于我们': 'Về chúng tôi',
+    '规则中心': 'Trung tâm quy tắc',
+    '创作服务': 'Dịch vụ sáng tạo',
+    '身份认证': 'Xác minh danh tính',
+    'MCN入驻': 'Đăng ký MCN',
+    '社会机构入驻': 'Đăng ký tổ chức xã hội',
+    '安全与信任中心': 'Trung tâm an toàn và tin cậy',
+    '抖音直播伴侣': 'Trợ lý livestream Douyin',
+    '生活服务': 'Dịch vụ đời sống',
+    '开放平台': 'Nền tảng mở',
     '历史记录': 'Lịch sử',
     '观看历史': 'Lịch sử xem',
     '稍后再看': 'Xem sau',
