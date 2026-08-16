@@ -19,10 +19,10 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('max-width: none'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-translated]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-live-translated]'), true);
-  assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-live-layer]'), true);
-  assert.equal(douyinVH.searchStyle.text.includes('z-index: 10000'), true);
-  assert.equal(douyinVH.searchStyle.text.includes('z-index: auto !important'), true);
-  assert.equal(douyinVH.searchStyle.text.includes('z-index: 0 !important'), false);
+  assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-live-layer]'), false);
+  assert.equal(douyinVH.searchStyle.text.includes('z-index'), false);
+  assert.equal(douyinVH.searchStyle.text.includes('clip-path'), false);
+  assert.equal(douyinVH.searchStyle.text.includes('pointer-events'), false);
   assert.equal(douyinVH.searchStyle.text.includes('word-break: keep-all'), true);
   assert.equal(douyinVH.searchStyle.text.includes('font-size: 10px'), true);
   assert.equal(douyinVH.searchStyle.text.includes('Segoe UI'), true);
@@ -30,62 +30,12 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('!important'), true);
 });
 
-test('exposes non-layout pass-through styling for live.douyin player', () => {
-  assert.equal(douyinVH.liveDouyinStyle.text.includes('.LivePlayer_LivingPlayer'), true);
-  assert.equal(douyinVH.liveDouyinStyle.text.includes('pointer-events: none !important'), true);
-  assert.equal(douyinVH.liveDouyinStyle.text.includes('.douyin-player-controls'), true);
-  assert.equal(douyinVH.liveDouyinStyle.text.includes('pointer-events: auto !important'), true);
-  assert.equal(douyinVH.liveDouyinStyle.text.includes('position:'), false);
-  assert.equal(douyinVH.liveDouyinStyle.text.includes('z-index:'), false);
-});
-
-test('clips live player paint at the gift bar without changing layout', () => {
-  assert.equal(
-    douyinVH.calculateLivePlayerClipBottom({ bottom: 911 }, { top: 763 }),
-    148,
-  );
-  assert.equal(
-    douyinVH.calculateLivePlayerClipBottom({ bottom: 700 }, { top: 763 }),
-    0,
-  );
-  assert.match(
-    douyinVH.liveDouyinStyle.text,
-    /clip-path: inset\(var\(--douyin-vh-live-player-clip-top, 0px\) var\(--douyin-vh-live-player-clip-right, 0px\) var\(--douyin-vh-live-player-clip-bottom, 0px\) 0\) !important/u,
-  );
-});
-
-test('clips live player paint below the fixed header without changing layout', () => {
-  assert.equal(
-    douyinVH.calculateLivePlayerClipTop({ top: 0 }, { bottom: 56 }),
-    56,
-  );
-  assert.equal(
-    douyinVH.calculateLivePlayerClipTop({ top: 20 }, { bottom: 56 }),
-    36,
-  );
-  assert.equal(
-    douyinVH.calculateLivePlayerClipTop({ top: 0 }, { bottom: 0 }),
-    0,
-  );
-  assert.match(
-    douyinVH.liveDouyinStyle.text,
-    /clip-path: inset\(var\(--douyin-vh-live-player-clip-top, 0px\) var\(--douyin-vh-live-player-clip-right, 0px\) var\(--douyin-vh-live-player-clip-bottom, 0px\) 0\) !important/u,
-  );
-});
-
-test('clips live player paint before the open gift panel without changing layout', () => {
-  assert.equal(
-    douyinVH.calculateLivePlayerClipRight({ left: 0, right: 1217 }, { left: 834, right: 1209 }),
-    383,
-  );
-  assert.equal(
-    douyinVH.calculateLivePlayerClipRight({ left: 0, right: 1217 }, { left: 1300, right: 1400 }),
-    0,
-  );
-  assert.match(
-    douyinVH.liveDouyinStyle.text,
-    /clip-path: inset\(var\(--douyin-vh-live-player-clip-top, 0px\) var\(--douyin-vh-live-player-clip-right, 0px\) var\(--douyin-vh-live-player-clip-bottom, 0px\) 0\) !important/u,
-  );
+test('does not expose or inject live player layer overrides', () => {
+  assert.equal(douyinVH.liveDouyinStyle, undefined);
+  assert.equal(douyinVH.createLiveDouyinController, undefined);
+  assert.equal(douyinVH.calculateLivePlayerClipTop, undefined);
+  assert.equal(douyinVH.calculateLivePlayerClipRight, undefined);
+  assert.equal(douyinVH.calculateLivePlayerClipBottom, undefined);
 });
 
 test('marks translated popup-trigger labels so fixed navigation cells do not wrap', () => {
@@ -447,9 +397,6 @@ test('translates livestream gifts, recharge and audience filters without scannin
     ],
   );
   assert.equal(rechargeRoot.children[0].textContent, 'Nạp tiền');
-  assert.equal(giftsRoot.getAttribute('data-douyin-vh-live-layer'), 'true');
-  assert.equal(audiencePanel.getAttribute('data-douyin-vh-live-layer'), 'true');
-  assert.equal(appRoot.getAttribute('data-douyin-vh-live-root'), 'true');
   assert.equal(audienceLabel.textContent, 'Người xem trực tuyến');
   assert.deepEqual(
     audienceFilters.children.map(node => node.textContent),
@@ -500,45 +447,6 @@ test('adds and removes compact search styling with the controller lifecycle', ()
 
   assert.equal(styles.size, 1);
   assert.equal(styles.get(douyinVH.searchStyle.id).textContent, douyinVH.searchStyle.text);
-
-  controller.stop();
-
-  assert.equal(styles.size, 0);
-});
-
-test('adds and removes live.douyin pass-through styling with its lifecycle', () => {
-  const styles = new Map();
-  const head = {
-    appendChild(style) {
-      style.parentNode = this;
-      styles.set(style.id, style);
-    },
-    removeChild(style) {
-      styles.delete(style.id);
-      style.parentNode = null;
-    },
-  };
-  const documentObject = {
-    documentElement: {},
-    head,
-    getElementById(id) {
-      return styles.get(id) || null;
-    },
-    createElement(tagName) {
-      return {
-        tagName: tagName.toUpperCase(),
-        remove() {
-          head.removeChild(this);
-        },
-      };
-    },
-  };
-
-  const controller = douyinVH.createLiveDouyinController({ document: documentObject });
-  controller.start();
-
-  assert.equal(styles.size, 1);
-  assert.equal(styles.get(douyinVH.liveDouyinStyle.id).textContent, douyinVH.liveDouyinStyle.text);
 
   controller.stop();
 

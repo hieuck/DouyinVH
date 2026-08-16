@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.18
+// @version      0.9.19
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @match        https://live.douyin.com/*
@@ -265,16 +265,9 @@
   });
 
   const SEARCH_STYLE_ID = 'douyin-vh-search-style';
-  const LIVE_DOUYIN_STYLE_ID = 'douyin-vh-live-domain-style';
-  const LIVE_DOUYIN_HOSTNAME = 'live.douyin.com';
-  const LIVE_PLAYER_CLIP_TOP_PROPERTY = '--douyin-vh-live-player-clip-top';
-  const LIVE_PLAYER_CLIP_RIGHT_PROPERTY = '--douyin-vh-live-player-clip-right';
-  const LIVE_PLAYER_CLIP_BOTTOM_PROPERTY = '--douyin-vh-live-player-clip-bottom';
   const NO_WRAP_ATTRIBUTE = 'data-douyin-vh-nowrap';
   const TRANSLATED_ATTRIBUTE = 'data-douyin-vh-translated';
   const LIVE_TRANSLATED_ATTRIBUTE = 'data-douyin-vh-live-translated';
-  const LIVE_LAYER_ATTRIBUTE = 'data-douyin-vh-live-layer';
-  const LIVE_ROOT_ATTRIBUTE = 'data-douyin-vh-live-root';
   const SEARCH_PLACEHOLDER = translations[String.fromCodePoint(
     0x641c,
     0x7d22,
@@ -337,16 +330,9 @@
     '  white-space: nowrap !important;',
     '  word-break: keep-all !important;',
     '}',
-     `[data-e2e=gifts-container] [${LIVE_TRANSLATED_ATTRIBUTE}] {`,
-     '  font-size: 10px !important;',
-     '}',
-     `[${LIVE_LAYER_ATTRIBUTE}] {`,
-     '  position: relative !important;',
-     '  z-index: 10000 !important;',
-     '}',
-     `body:has([${LIVE_ROOT_ATTRIBUTE}=true]) > .i5Ej1sWo {`,
-     '  z-index: auto !important;',
-     '}',
+    `[data-e2e=gifts-container] [${LIVE_TRANSLATED_ATTRIBUTE}] {`,
+    '  font-size: 10px !important;',
+    '}',
    ].join(String.fromCharCode(10))
     .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(
       0x641c,
@@ -360,20 +346,6 @@
       0x5bb9,
     ))
     .replace('__DOUYIN_VH_SEARCH_TRANSLATED__', SEARCH_PLACEHOLDER);
-
-  const LIVE_DOUYIN_STYLE_TEXT = [
-    '.LivePlayer_LivingPlayer {',
-    `  clip-path: inset(var(${LIVE_PLAYER_CLIP_TOP_PROPERTY}, 0px) var(${LIVE_PLAYER_CLIP_RIGHT_PROPERTY}, 0px) var(${LIVE_PLAYER_CLIP_BOTTOM_PROPERTY}, 0px) 0) !important;`,
-    '}',
-    '',
-    '.LivePlayer_LivingPlayer,',
-    '.LivePlayer_LivingPlayer video {',
-    '  pointer-events: none !important;',
-    '}',
-    '.LivePlayer_LivingPlayer .douyin-player-controls {',
-    '  pointer-events: auto !important;',
-    '}',
-  ].join(String.fromCharCode(10));
 
   const SAFE_UI_SELECTOR = [
     'header',
@@ -500,7 +472,6 @@
   const LIVE_GIFT_SELECTOR = '[data-e2e=gifts-container]';
   const LIVE_RECHARGE_SELECTOR = '[data-e2e=recharge-btn]';
   const LIVE_AUDIENCE_SELECTOR = '[data-e2e=live-room-audience]';
-  const LIVE_CHAT_SELECTOR = '[data-e2e=live-chatting]';
   const LIVE_UI_LABELS = new Set([
     '人气票',
     '小心心',
@@ -846,30 +817,6 @@
     }
   }
 
-  function markLiveOverlayLayer(element) {
-    if (element && element.nodeType === 1 && typeof element.setAttribute === 'function') {
-      element.setAttribute(LIVE_LAYER_ATTRIBUTE, 'true');
-    }
-  }
-
-  function findLiveOverlayRoot(element) {
-    let currentElement = element;
-    while (currentElement && currentElement.parentElement) {
-      if (currentElement.parentElement.tagName === 'BODY') {
-        return currentElement;
-      }
-      currentElement = currentElement.parentElement;
-    }
-    return null;
-  }
-
-  function markLiveOverlayRoot(element) {
-    const rootElement = findLiveOverlayRoot(element);
-    if (rootElement && typeof rootElement.setAttribute === 'function') {
-      rootElement.setAttribute(LIVE_ROOT_ATTRIBUTE, 'true');
-    }
-  }
-
   function getDescendantElements(element) {
     if (!element || element.nodeType !== 1) {
       return [];
@@ -932,21 +879,6 @@
     )) || null;
   }
 
-  function findLiveSidePanel(audienceCount) {
-    let currentElement = audienceCount?.parentElement;
-    while (currentElement && currentElement.nodeType === 1) {
-      if (
-        typeof currentElement.querySelector === 'function'
-        && currentElement.querySelector(LIVE_CHAT_SELECTOR)
-      ) {
-        return currentElement;
-      }
-      currentElement = currentElement.parentElement;
-    }
-
-    return audienceCount?.parentElement?.parentElement || null;
-  }
-
   function scanLiveUi(documentObject) {
     if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
       return;
@@ -957,19 +889,14 @@
       ...documentObject.querySelectorAll(LIVE_RECHARGE_SELECTOR),
     ];
     const audienceCounts = [...documentObject.querySelectorAll(LIVE_AUDIENCE_SELECTOR)];
-    for (const liveElement of [...scopedRoots, ...audienceCounts]) {
-      markLiveOverlayRoot(liveElement);
-    }
 
     for (const rootElement of scopedRoots) {
-      markLiveOverlayLayer(rootElement);
       for (const element of getDescendantElements(rootElement)) {
         translateLiveLeafText(element);
       }
     }
 
     for (const audienceCount of audienceCounts) {
-      markLiveOverlayLayer(findLiveSidePanel(audienceCount));
       const audienceHeader = audienceCount.parentElement;
       for (const element of getDescendantElements(audienceHeader)) {
         translateLiveLeafText(element);
@@ -1076,276 +1003,6 @@
     }
   }
 
-  function ensureLiveDouyinStyle(documentObject) {
-    if (!documentObject || typeof documentObject.createElement !== 'function') {
-      return;
-    }
-
-    let style = typeof documentObject.getElementById === 'function'
-      ? documentObject.getElementById(LIVE_DOUYIN_STYLE_ID)
-      : null;
-    if (!style) {
-      style = documentObject.createElement('style');
-      style.id = LIVE_DOUYIN_STYLE_ID;
-      const parent = documentObject.head || documentObject.documentElement;
-      if (!parent || typeof parent.appendChild !== 'function') {
-        return;
-      }
-      parent.appendChild(style);
-    }
-
-    style.textContent = LIVE_DOUYIN_STYLE_TEXT;
-  }
-
-  function removeLiveDouyinStyle(documentObject) {
-    if (!documentObject || typeof documentObject.getElementById !== 'function') {
-      return;
-    }
-
-    const style = documentObject.getElementById(LIVE_DOUYIN_STYLE_ID);
-    if (!style) {
-      return;
-    }
-
-    if (typeof style.remove === 'function') {
-      style.remove();
-    } else if (style.parentNode && typeof style.parentNode.removeChild === 'function') {
-      style.parentNode.removeChild(style);
-    }
-  }
-
-  function getRectEdge(rect, edge) {
-    const directValue = Number(rect?.[edge]);
-    if (Number.isFinite(directValue)) {
-      return directValue;
-    }
-
-    if (edge === 'bottom') {
-      const top = Number(rect?.top);
-      const height = Number(rect?.height);
-      if (Number.isFinite(top) && Number.isFinite(height)) {
-        return top + height;
-      }
-    }
-
-    return null;
-  }
-
-  function calculateLivePlayerClipBottom(playerRect, giftRect) {
-    const playerBottom = getRectEdge(playerRect, 'bottom');
-    const giftTop = getRectEdge(giftRect, 'top');
-    if (playerBottom === null || giftTop === null) {
-      return 0;
-    }
-
-    return Math.max(0, Math.ceil(playerBottom - giftTop));
-  }
-
-  function calculateLivePlayerClipTop(playerRect, headerRect) {
-    const playerTop = getRectEdge(playerRect, 'top');
-    const headerBottom = getRectEdge(headerRect, 'bottom');
-    if (playerTop === null || headerBottom === null) {
-      return 0;
-    }
-
-    return Math.max(0, Math.ceil(headerBottom - playerTop));
-  }
-
-  function calculateLivePlayerClipRight(playerRect, panelRect) {
-    const playerLeft = getRectEdge(playerRect, 'left');
-    const playerRight = getRectEdge(playerRect, 'right');
-    const panelLeft = getRectEdge(panelRect, 'left');
-    const panelRight = getRectEdge(panelRect, 'right');
-    if (
-      playerLeft === null
-      || playerRight === null
-      || panelLeft === null
-      || panelRight === null
-      || panelRight <= playerLeft
-      || panelLeft >= playerRight
-    ) {
-      return 0;
-    }
-
-    return Math.max(0, Math.ceil(playerRight - Math.max(playerLeft, panelLeft)));
-  }
-
-  function findLiveHeaderRect(documentObject) {
-    if (typeof documentObject?.querySelectorAll !== 'function') {
-      return null;
-    }
-
-    const headers = Array.from(documentObject.querySelectorAll(
-      'header, #douyin-header, [data-e2e=header]',
-    ));
-    return headers
-      .map(element => (
-        typeof element?.getBoundingClientRect === 'function'
-          ? element.getBoundingClientRect()
-          : null
-      ))
-      .filter(rect => rect && Number(rect.width) > 0 && Number(rect.height) > 0)
-      .sort((left, right) => getRectEdge(right, 'bottom') - getRectEdge(left, 'bottom'))[0]
-      || null;
-  }
-
-  function findLiveGiftPanelRect(documentObject) {
-    if (typeof documentObject?.querySelectorAll !== 'function') {
-      return null;
-    }
-
-    const panels = Array.from(documentObject.querySelectorAll(
-      '[data-e2e=__right_gift_panel__], #live-gift-panel-right',
-    ));
-    return panels
-      .map(element => (
-        typeof element?.getBoundingClientRect === 'function'
-          ? element.getBoundingClientRect()
-          : null
-      ))
-      .filter(rect => rect && Number(rect.width) > 0 && Number(rect.height) > 0)
-      .sort((left, right) => getRectEdge(left, 'left') - getRectEdge(right, 'left'))[0]
-      || null;
-  }
-
-  function updateLivePlayerClip(documentObject) {
-    if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
-      return;
-    }
-
-    const players = Array.from(documentObject.querySelectorAll('.LivePlayer_LivingPlayer'));
-    const giftBar = documentObject.querySelectorAll(LIVE_GIFT_SELECTOR)?.[0] || null;
-    const giftRect = typeof giftBar?.getBoundingClientRect === 'function'
-      ? giftBar.getBoundingClientRect()
-      : null;
-    const headerRect = findLiveHeaderRect(documentObject);
-    const giftPanelRect = findLiveGiftPanelRect(documentObject);
-
-    for (const player of players) {
-      if (!player?.style || typeof player.getBoundingClientRect !== 'function') {
-        continue;
-      }
-
-      const playerRect = player.getBoundingClientRect();
-      const clipTop = calculateLivePlayerClipTop(playerRect, headerRect);
-      const clipRight = calculateLivePlayerClipRight(playerRect, giftPanelRect);
-      const clipBottom = calculateLivePlayerClipBottom(playerRect, giftRect);
-      if (clipTop > 0) {
-        player.style.setProperty(
-          LIVE_PLAYER_CLIP_TOP_PROPERTY,
-          `${clipTop}px`,
-        );
-      } else {
-        player.style.removeProperty(LIVE_PLAYER_CLIP_TOP_PROPERTY);
-      }
-      if (clipRight > 0) {
-        player.style.setProperty(
-          LIVE_PLAYER_CLIP_RIGHT_PROPERTY,
-          `${clipRight}px`,
-        );
-      } else {
-        player.style.removeProperty(LIVE_PLAYER_CLIP_RIGHT_PROPERTY);
-      }
-      if (clipBottom > 0) {
-        player.style.setProperty(
-          LIVE_PLAYER_CLIP_BOTTOM_PROPERTY,
-          `${clipBottom}px`,
-        );
-      } else {
-        player.style.removeProperty(LIVE_PLAYER_CLIP_BOTTOM_PROPERTY);
-      }
-    }
-  }
-
-  function createLiveDouyinController(options = {}) {
-    const documentObject = options.document || root?.document;
-    const MutationObserverConstructor = options.MutationObserver || root?.MutationObserver;
-    const schedule = typeof options.setTimeout === 'function'
-      ? options.setTimeout
-      : typeof root?.setTimeout === 'function'
-        ? root.setTimeout.bind(root)
-        : callback => callback();
-    const cancel = typeof options.clearTimeout === 'function'
-      ? options.clearTimeout
-      : typeof root?.clearTimeout === 'function'
-        ? root.clearTimeout.bind(root)
-        : () => {};
-
-    let observer = null;
-    let timer = null;
-    let started = false;
-
-    function scan() {
-      ensureLiveDouyinStyle(documentObject);
-      updateLivePlayerClip(documentObject);
-    }
-
-    function queueScan() {
-      if (timer !== null) {
-        return;
-      }
-      timer = schedule(() => {
-        timer = null;
-        scan();
-      }, 0);
-    }
-
-    const controller = {
-      start() {
-        if (started || !documentObject?.documentElement) {
-          return controller;
-        }
-
-        started = true;
-        scan();
-
-        if (typeof MutationObserverConstructor === 'function') {
-          observer = new MutationObserverConstructor(records => {
-            if (records.some(record => record.type === 'childList')) {
-              queueScan();
-            }
-          });
-          observer.observe(documentObject.documentElement, {
-            subtree: true,
-            childList: true,
-          });
-        }
-
-        if (typeof root?.addEventListener === 'function') {
-          root.addEventListener('resize', queueScan);
-        }
-
-        return controller;
-      },
-
-      stop() {
-        observer?.disconnect();
-        observer = null;
-        if (timer !== null) {
-          cancel(timer);
-          timer = null;
-        }
-        if (typeof root?.removeEventListener === 'function') {
-          root.removeEventListener('resize', queueScan);
-        }
-        removeLiveDouyinStyle(documentObject);
-        started = false;
-        return controller;
-      },
-
-      scan() {
-        scan();
-        return controller;
-      },
-
-      get started() {
-        return started;
-      },
-    };
-
-    return controller;
-  }
-
   function createController(options = {}) {
     const documentObject = options.document || root?.document;
     const MutationObserverConstructor = options.MutationObserver || root?.MutationObserver;
@@ -1441,15 +1098,11 @@
       return root.__douyinVHController;
     }
 
-    const controller = root?.location?.hostname === LIVE_DOUYIN_HOSTNAME
-      ? createLiveDouyinController({
-        document: options.document || root?.document,
-      })
-      : createController({
-        ...options,
-        document: options.document || root?.document,
-        MutationObserver: options.MutationObserver || root?.MutationObserver,
-      });
+    const controller = createController({
+      ...options,
+      document: options.document || root?.document,
+      MutationObserver: options.MutationObserver || root?.MutationObserver,
+    });
     root.__douyinVHController = controller.start();
     return root.__douyinVHController;
   }
@@ -1468,10 +1121,6 @@
       id: SEARCH_STYLE_ID,
       text: SEARCH_STYLE_TEXT,
     }),
-    liveDouyinStyle: Object.freeze({
-      id: LIVE_DOUYIN_STYLE_ID,
-      text: LIVE_DOUYIN_STYLE_TEXT,
-    }),
     normalizeText,
     isGlobalUiLabel,
     translateExact,
@@ -1481,15 +1130,11 @@
     translateFooterText,
     translateTextNode,
     translatePlayerLeafText,
-    calculateLivePlayerClipTop,
-    calculateLivePlayerClipRight,
-    calculateLivePlayerClipBottom,
     scanPlayerUi,
     scanLiveUi,
     isTextNodeAllowed,
     translateElementAttributes,
     createController,
-    createLiveDouyinController,
     start,
     stop,
   });
