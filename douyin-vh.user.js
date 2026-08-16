@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.4
+// @version      0.9.5
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -238,6 +238,7 @@
 
   const SEARCH_STYLE_ID = 'douyin-vh-search-style';
   const NO_WRAP_ATTRIBUTE = 'data-douyin-vh-nowrap';
+  const TRANSLATED_ATTRIBUTE = 'data-douyin-vh-translated';
   const SEARCH_PLACEHOLDER = translations[String.fromCodePoint(
     0x641c,
     0x7d22,
@@ -282,9 +283,16 @@
     '  min-width: max-content !important;',
     '  max-width: none !important;',
     '  flex-shrink: 0 !important;',
-    '  word-break: keep-all !important;',
-    '}',
-  ].join(String.fromCharCode(10))
+     '  word-break: keep-all !important;',
+     '}',
+     `[${TRANSLATED_ATTRIBUTE}] {`,
+     '  font-family: Segoe UI, Tahoma, Arial, sans-serif !important;',
+     '  font-kerning: normal !important;',
+     '  font-variant-ligatures: normal !important;',
+     '  letter-spacing: normal !important;',
+     '  word-spacing: normal !important;',
+     '}',
+   ].join(String.fromCharCode(10))
     .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(
       0x641c,
       0x7d22,
@@ -463,6 +471,12 @@
     }
   }
 
+  function markTranslatedUiElement(element) {
+    if (element && element.nodeType === 1 && typeof element.setAttribute === 'function') {
+      element.setAttribute(TRANSLATED_ATTRIBUTE, 'true');
+    }
+  }
+
   function isProfileGenderElement(element) {
     return Boolean(
       element
@@ -552,6 +566,7 @@
     const translatedValue = translateUiText(currentValue, element);
     if (translatedValue !== currentValue && typeof element.setAttribute === 'function') {
       element.setAttribute(attributeName, translatedValue);
+      markTranslatedUiElement(element);
     }
   }
 
@@ -593,6 +608,7 @@
       for (const remainingNode of textNodes.slice(1)) {
         remainingNode.nodeValue = '';
       }
+      markTranslatedUiElement(parentElement);
       markNoWrapUiAncestors(parentElement);
       return;
     }
@@ -600,6 +616,7 @@
     const translatedValue = translateUiText(currentValue, parentElement);
     if (translatedValue !== currentValue) {
       textNode.nodeValue = translatedValue;
+      markTranslatedUiElement(parentElement);
       markNoWrapUiAncestors(parentElement);
     }
   }
@@ -652,6 +669,7 @@
     const translatedValue = translateExact(currentValue);
     if (translatedValue !== currentValue) {
       element.textContent = translatedValue;
+      markTranslatedUiElement(element);
     }
   }
 

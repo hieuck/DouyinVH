@@ -17,6 +17,9 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('min-width: max-content'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-nowrap]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('max-width: none'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-translated]'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('Segoe UI'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('font-kerning: normal'), true);
   assert.equal(douyinVH.searchStyle.text.includes('!important'), true);
 });
 
@@ -65,6 +68,39 @@ test('marks translated popup-trigger labels so fixed navigation cells do not wra
   assert.equal(textNode.nodeValue, 'Hình nền');
   assert.equal(labelAttributes.get('data-douyin-vh-nowrap'), 'true');
   assert.equal(popupAttributes.get('data-douyin-vh-nowrap'), 'true');
+});
+
+test('marks translated safe-ui labels for Vietnamese font rendering', () => {
+  const attributes = new Map();
+  const navigationRoot = {
+    nodeType: 1,
+    tagName: 'NAV',
+    parentElement: null,
+  };
+  const labelElement = {
+    nodeType: 1,
+    tagName: 'SPAN',
+    parentElement: navigationRoot,
+    getAttribute(name) {
+      return attributes.get(name) || null;
+    },
+    setAttribute(name, value) {
+      attributes.set(name, value);
+    },
+    closest(selector) {
+      return selector.includes('[data-e2e=douyin-navigation]') ? navigationRoot : null;
+    },
+  };
+  const textNode = {
+    nodeType: 3,
+    nodeValue: '朋友',
+    parentElement: labelElement,
+  };
+
+  douyinVH.translateTextNode(textNode);
+
+  assert.equal(textNode.nodeValue, 'Bạn bè');
+  assert.equal(attributes.get('data-douyin-vh-translated'), 'true');
 });
 
 test('translates leaf labels rendered inside dynamic video players', () => {
