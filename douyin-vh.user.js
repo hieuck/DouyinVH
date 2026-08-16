@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.14
+// @version      0.9.15
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @match        https://live.douyin.com/*
@@ -267,6 +267,7 @@
   const SEARCH_STYLE_ID = 'douyin-vh-search-style';
   const LIVE_DOUYIN_STYLE_ID = 'douyin-vh-live-domain-style';
   const LIVE_DOUYIN_HOSTNAME = 'live.douyin.com';
+  const LIVE_PLAYER_CLIP_BOTTOM_PROPERTY = '--douyin-vh-live-player-clip-bottom';
   const NO_WRAP_ATTRIBUTE = 'data-douyin-vh-nowrap';
   const TRANSLATED_ATTRIBUTE = 'data-douyin-vh-translated';
   const LIVE_TRANSLATED_ATTRIBUTE = 'data-douyin-vh-live-translated';
@@ -359,6 +360,10 @@
     .replace('__DOUYIN_VH_SEARCH_TRANSLATED__', SEARCH_PLACEHOLDER);
 
   const LIVE_DOUYIN_STYLE_TEXT = [
+    '.LivePlayer_LivingPlayer {',
+    `  clip-path: inset(0 0 var(${LIVE_PLAYER_CLIP_BOTTOM_PROPERTY}, 0px) 0) !important;`,
+    '}',
+    '',
     '.LivePlayer_LivingPlayer,',
     '.LivePlayer_LivingPlayer video {',
     '  pointer-events: none !important;',
@@ -1107,9 +1112,96 @@
     }
   }
 
+  function getRectEdge(rect, edge) {
+    const directValue = Number(rect?.[edge]);
+    if (Number.isFinite(directValue)) {
+      return directValue;
+    }
+
+    if (edge === 'bottom') {
+      const top = Number(rect?.top);
+      const height = Number(rect?.height);
+      if (Number.isFinite(top) && Number.isFinite(height)) {
+        return top + height;
+      }
+    }
+
+    return null;
+  }
+
+  function calculateLivePlayerClipBottom(playerRect, giftRect) {
+    const playerBottom = getRectEdge(playerRect, 'bottom');
+    const giftTop = getRectEdge(giftRect, 'top');
+    if (playerBottom === null || giftTop === null) {
+      return 0;
+    }
+
+    return Math.max(0, Math.ceil(playerBottom - giftTop));
+  }
+
+  function updateLivePlayerClip(documentObject) {
+    if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
+      return;
+    }
+
+    const players = Array.from(documentObject.querySelectorAll('.LivePlayer_LivingPlayer'));
+    const giftBar = documentObject.querySelectorAll(LIVE_GIFT_SELECTOR)?.[0] || null;
+    const giftRect = typeof giftBar?.getBoundingClientRect === 'function'
+      ? giftBar.getBoundingClientRect()
+      : null;
+
+    for (const player of players) {
+      if (!player?.style || typeof player.getBoundingClientRect !== 'function') {
+        continue;
+      }
+
+      const clipBottom = calculateLivePlayerClipBottom(
+        player.getBoundingClientRect(),
+        giftRect,
+      );
+      if (clipBottom > 0) {
+        player.style.setProperty(
+          LIVE_PLAYER_CLIP_BOTTOM_PROPERTY,
+          `${clipBottom}px`,
+        );
+      } else {
+        player.style.removeProperty(LIVE_PLAYER_CLIP_BOTTOM_PROPERTY);
+      }
+    }
+  }
+
   function createLiveDouyinController(options = {}) {
     const documentObject = options.document || root?.document;
+    const MutationObserverConstructor = options.MutationObserver || root?.MutationObserver;
+    const schedule = typeof options.setTimeout === 'function'
+      ? options.setTimeout
+      : typeof root?.setTimeout === 'function'
+        ? root.setTimeout.bind(root)
+        : callback => callback();
+    const cancel = typeof options.clearTimeout === 'function'
+      ? options.clearTimeout
+      : typeof root?.clearTimeout === 'function'
+        ? root.clearTimeout.bind(root)
+        : () => {};
+
+    let observer = null;
+    let timer = null;
     let started = false;
+
+    function scan() {
+      ensureLiveDouyinStyle(documentObject);
+      updateLivePlayerClip(documentObject);
+    }
+
+    function queueScan() {
+      if (timer !== null) {
+        return;
+      }
+      timer = schedule(() => {
+        timer = null;
+        scan();
+      }, 0);
+    }
 
     const controller = {
       start() {
@@ -1118,18 +1210,44 @@
         }
 
         started = true;
-        ensureLiveDouyinStyle(documentObject);
+        scan();
+
+        if (typeof MutationObserverConstructor === 'function') {
+          observer = new MutationObserverConstructor(records => {
+            if (records.some(record => record.type === 'childList')) {
+              queueScan();
+            }
+          });
+          observer.observe(documentObject.documentElement, {
+            subtree: true,
+            childList: true,
+          });
+        }
+
+        if (typeof root?.addEventListener === 'function') {
+          root.addEventListener('resize', queueScan);
+        }
+
         return controller;
       },
 
       stop() {
+        observer?.disconnect();
+        observer = null;
+        if (timer !== null) {
+          cancel(timer);
+          timer = null;
+        }
+        if (typeof root?.removeEventListener === 'function') {
+          root.removeEventListener('resize', queueScan);
+        }
         removeLiveDouyinStyle(documentObject);
         started = false;
         return controller;
       },
 
       scan() {
-        ensureLiveDouyinStyle(documentObject);
+        scan();
         return controller;
       },
 
@@ -1276,6 +1394,7 @@
     translateFooterText,
     translateTextNode,
     translatePlayerLeafText,
+    calculateLivePlayerClipBottom,
     scanPlayerUi,
     scanLiveUi,
     isTextNodeAllowed,

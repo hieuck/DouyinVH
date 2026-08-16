@@ -39,6 +39,21 @@ test('exposes non-layout pass-through styling for live.douyin player', () => {
   assert.equal(douyinVH.liveDouyinStyle.text.includes('z-index:'), false);
 });
 
+test('clips live player paint at the gift bar without changing layout', () => {
+  assert.equal(
+    douyinVH.calculateLivePlayerClipBottom({ bottom: 911 }, { top: 763 }),
+    148,
+  );
+  assert.equal(
+    douyinVH.calculateLivePlayerClipBottom({ bottom: 700 }, { top: 763 }),
+    0,
+  );
+  assert.match(
+    douyinVH.liveDouyinStyle.text,
+    /clip-path: inset\(0 0 var\(--douyin-vh-live-player-clip-bottom, 0px\) 0\) !important/u,
+  );
+});
+
 test('marks translated popup-trigger labels so fixed navigation cells do not wrap', () => {
   const popupAttributes = new Map([
     ['data-popupid', 'wallpaper'],
