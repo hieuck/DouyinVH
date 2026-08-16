@@ -510,6 +510,137 @@ test('translates live homepage labels without translating room or username conte
   );
 });
 
+
+test('translates series navigation and card metadata without translating titles', () => {
+  function createLeaf(value) {
+    const attributes = new Map();
+    return {
+      nodeType: 1,
+      tagName: 'DIV',
+      childElementCount: 0,
+      childNodes: [],
+      textContent: value,
+      parentElement: null,
+      getAttribute(name) {
+        return attributes.get(name) || null;
+      },
+      setAttribute(name, nextValue) {
+        attributes.set(name, nextValue);
+      },
+      closest() {
+        return null;
+      },
+      attributes,
+    };
+  }
+
+  function createContainer(children) {
+    const container = {
+      nodeType: 1,
+      tagName: 'DIV',
+      childElementCount: children.length,
+      childNodes: children,
+      children,
+      parentElement: null,
+      getAttribute() {
+        return null;
+      },
+      setAttribute() {},
+      closest() {
+        return null;
+      },
+      querySelectorAll(selector) {
+        assert.equal(selector, '*');
+        const descendants = [];
+        for (const child of children) {
+          descendants.push(child);
+          if (typeof child.querySelectorAll === 'function') {
+            descendants.push(...child.querySelectorAll('*'));
+          }
+        }
+        return descendants;
+      },
+    };
+    for (const child of children) {
+      child.parentElement = container;
+    }
+    return container;
+  }
+
+  const navigationRoot = createContainer([
+    createLeaf('推荐'),
+    createLeaf('热榜'),
+    createLeaf('榜单'),
+    createLeaf('爱情'),
+    createLeaf('剧情'),
+    createLeaf('逆袭'),
+    createLeaf('反转'),
+    createLeaf('亲情'),
+    createLeaf('恩怨'),
+    createLeaf('玄幻'),
+    createLeaf('奇幻'),
+    createLeaf('古装'),
+    createLeaf('悬疑'),
+    createLeaf('友情'),
+    createLeaf('喜剧'),
+    createLeaf('犯罪'),
+    createLeaf('惊悚'),
+    createLeaf('青春'),
+    createLeaf('科幻'),
+    createLeaf('仙侠'),
+    createLeaf('其他'),
+  ]);
+  const title = createLeaf('五十岁隐藏身份，我遇见真爱');
+  const exactTitle = createLeaf('爱情');
+  const viewCount = createLeaf('14.8亿');
+  const metadata = createLeaf('恩怨斗争·69集');
+  const cardRoot = createContainer([viewCount, title, exactTitle, metadata]);
+  const documentObject = {
+    querySelectorAll(selector) {
+      if (selector === 'main *') {
+        return [navigationRoot];
+      }
+      if (selector === '[data-e2e=scroll-list]') {
+        return [cardRoot];
+      }
+      return [];
+    },
+  };
+
+  douyinVH.scanSeriesUi(documentObject);
+
+  assert.deepEqual(
+    navigationRoot.children.map(node => node.textContent),
+    [
+      'Đề xuất',
+      'Bảng xếp hạng hot',
+      'Bảng xếp hạng',
+      'Tình yêu',
+      'Chính kịch',
+      'Nghịch tập',
+      'Lật ngược',
+      'Tình thân',
+      'Ân oán',
+      'Huyền huyễn',
+      'Kỳ ảo',
+      'Cổ trang',
+      'Trinh thám',
+      'Tình bạn',
+      'Hài kịch',
+      'Tội phạm',
+      'Giật gân',
+      'Thanh xuân',
+      'Khoa học viễn tưởng',
+      'Tiên hiệp',
+      'Khác',
+    ],
+  );
+  assert.equal(viewCount.textContent, '14.8 tỷ');
+  assert.equal(metadata.textContent, 'Ân oán đấu tranh · 69 tập');
+  assert.equal(title.textContent, '五十岁隐藏身份，我遇见真爱');
+  assert.equal(exactTitle.textContent, '爱情');
+});
+
 test('adds and removes compact search styling with the controller lifecycle', () => {
   const styles = new Map();
   const head = {

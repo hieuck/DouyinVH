@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.21
+// @version      0.9.22
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @match        https://live.douyin.com/*
@@ -43,6 +43,27 @@
     '主播': 'Chủ phòng',
     '暂时离开': 'Tạm thời rời đi',
     '更多直播': 'Thêm livestream',
+    '热榜': 'Bảng xếp hạng hot',
+    '榜单': 'Bảng xếp hạng',
+    '爱情': 'Tình yêu',
+    '剧情': 'Chính kịch',
+    '逆袭': 'Nghịch tập',
+    '反转': 'Lật ngược',
+    '亲情': 'Tình thân',
+    '恩怨': 'Ân oán',
+    '玄幻': 'Huyền huyễn',
+    '奇幻': 'Kỳ ảo',
+    '古装': 'Cổ trang',
+    '悬疑': 'Trinh thám',
+    '友情': 'Tình bạn',
+    '喜剧': 'Hài kịch',
+    '犯罪': 'Tội phạm',
+    '惊悚': 'Giật gân',
+    '青春': 'Thanh xuân',
+    '科幻': 'Khoa học viễn tưởng',
+    '仙侠': 'Tiên hiệp',
+    '其他': 'Khác',
+    '恩怨斗争': 'Ân oán đấu tranh',
     '直播': 'Trực tiếp',
     '放映厅': 'Phòng chiếu',
     '短剧': 'Phim ngắn',
@@ -492,6 +513,32 @@
     '[data-e2e=categoryTabs-container]',
     '[data-e2e=category-tabslist]',
   ]);
+  const SERIES_CARD_SELECTOR = '[data-e2e=scroll-list]';
+  const SERIES_NAV_LABELS = new Set([
+    '推荐',
+    '热榜',
+    '榜单',
+    '爱情',
+    '剧情',
+    '逆袭',
+    '反转',
+    '亲情',
+    '恩怨',
+    '玄幻',
+    '奇幻',
+    '古装',
+    '悬疑',
+    '友情',
+    '喜剧',
+    '犯罪',
+    '惊悚',
+    '青春',
+    '科幻',
+    '仙侠',
+    '其他',
+  ]);
+  const SERIES_NAV_REQUIRED_LABELS = new Set(['推荐', '热榜', '榜单']);
+  const SERIES_EPISODE_PATTERN = /^(.+?)·(\d+)集$/u;
   const LIVE_UI_LABELS = new Set([
     '人气票',
     '小心心',
@@ -888,6 +935,102 @@
     }
   }
 
+  function findSeriesNavigationRoots(documentObject) {
+    if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
+      return [];
+    }
+
+    const candidates = documentObject.querySelectorAll('main *');
+    return Array.from(candidates).filter(candidate => {
+      const children = Array.from(candidate.children || []);
+      if (children.length < SERIES_NAV_REQUIRED_LABELS.size) {
+        return false;
+      }
+
+      const childValues = children.map(child => normalizeText(child.textContent));
+      return children.every(child => Number(child.childElementCount || 0) === 0)
+        && [...SERIES_NAV_REQUIRED_LABELS].every(label => childValues.includes(label));
+    });
+  }
+
+  function translateSeriesNavigationLeafText(element) {
+    if (!element || element.nodeType !== 1 || isIgnoredElement(element)) {
+      return;
+    }
+
+    if (Number(element.childElementCount || 0) > 0) {
+      return;
+    }
+
+    const currentValue = element.textContent;
+    const normalizedValue = normalizeText(currentValue);
+    if (!SERIES_NAV_LABELS.has(normalizedValue)) {
+      return;
+    }
+
+    const translatedValue = translateExact(currentValue);
+    if (translatedValue !== currentValue) {
+      element.textContent = translatedValue;
+      markTranslatedUiElement(element);
+    }
+  }
+
+  function translateSeriesCardLeafText(element) {
+    if (!element || element.nodeType !== 1 || isIgnoredElement(element)) {
+      return;
+    }
+
+    if (Number(element.childElementCount || 0) > 0) {
+      return;
+    }
+
+    const currentValue = element.textContent;
+    const normalizedValue = normalizeText(currentValue);
+    const episodeMatch = normalizedValue.match(SERIES_EPISODE_PATTERN);
+    const isCount = PLAYER_COUNT_PATTERN.test(currentValue);
+    if (!episodeMatch && !isCount) {
+      return;
+    }
+
+    let translatedValue = currentValue;
+    if (episodeMatch) {
+      const translatedCategory = translateExact(episodeMatch[1]);
+      if (translatedCategory === episodeMatch[1]) {
+        return;
+      }
+      translatedValue = replaceNormalizedText(
+        currentValue,
+        `${translatedCategory} · ${episodeMatch[2]} tập`,
+      );
+    } else {
+      translatedValue = translatePlayerCount(currentValue);
+    }
+
+    if (translatedValue !== currentValue) {
+      element.textContent = translatedValue;
+      markTranslatedUiElement(element);
+    }
+  }
+
+  function scanSeriesUi(documentObject) {
+    if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
+      return;
+    }
+
+    const navigationRoots = new Set(findSeriesNavigationRoots(documentObject));
+    for (const rootElement of navigationRoots) {
+      for (const element of getDescendantElements(rootElement)) {
+        translateSeriesNavigationLeafText(element);
+      }
+    }
+
+    const cardRoots = documentObject.querySelectorAll(SERIES_CARD_SELECTOR);
+    for (const rootElement of cardRoots) {
+      for (const element of getDescendantElements(rootElement)) {
+        translateSeriesCardLeafText(element);
+      }
+    }
+  }
   function isLiveAudienceFilter(value) {
     return value === '全部'
       || value === '高等级用户'
@@ -1057,6 +1200,7 @@
         scanNode(documentObject.documentElement, documentObject);
         scanPlayerUi(documentObject);
         scanLiveUi(documentObject);
+        scanSeriesUi(documentObject);
       }
     }
 
@@ -1163,6 +1307,7 @@
     translatePlayerLeafText,
     scanPlayerUi,
     scanLiveUi,
+    scanSeriesUi,
     isTextNodeAllowed,
     translateElementAttributes,
     createController,
