@@ -406,6 +406,110 @@ test('translates livestream gifts, recharge and audience filters without scannin
   );
 });
 
+
+test('translates live homepage labels without translating room or username content', () => {
+  function createLeaf(value) {
+    const attributes = new Map();
+    return {
+      nodeType: 1,
+      tagName: 'DIV',
+      childElementCount: 0,
+      childNodes: [],
+      textContent: value,
+      parentElement: null,
+      getAttribute(name) {
+        return attributes.get(name) || null;
+      },
+      setAttribute(name, nextValue) {
+        attributes.set(name, nextValue);
+      },
+      closest() {
+        return null;
+      },
+      attributes,
+    };
+  }
+
+  function createContainer(children, dataE2e = null) {
+    const attributes = new Map(dataE2e ? [['data-e2e', dataE2e]] : []);
+    const container = {
+      nodeType: 1,
+      tagName: 'DIV',
+      childElementCount: children.length,
+      childNodes: children,
+      children,
+      parentElement: null,
+      getAttribute(name) {
+        return attributes.get(name) || null;
+      },
+      setAttribute(name, nextValue) {
+        attributes.set(name, nextValue);
+      },
+      closest() {
+        return null;
+      },
+      querySelectorAll(selector) {
+        assert.equal(selector, '*');
+        const descendants = [];
+        for (const child of children) {
+          descendants.push(child);
+          if (typeof child.querySelectorAll === 'function') {
+            descendants.push(...child.querySelectorAll('*'));
+          }
+        }
+        return descendants;
+      },
+      attributes,
+    };
+    for (const child of children) {
+      child.parentElement = container;
+    }
+    return container;
+  }
+
+  const categoryRoot = createContainer([
+    createLeaf('聊天'),
+    createLeaf('舞蹈'),
+    createLeaf('文化'),
+    createLeaf('运动'),
+  ], 'categoryTabs-container');
+  const followingRoot = createContainer([createLeaf('我的关注')], 'category-tabslist');
+  const liveHomeRoot = createContainer([
+    createLeaf('更多直播'),
+    createLeaf('全部'),
+    createLeaf('音乐'),
+    createLeaf('主播'),
+    createLeaf('暂时离开'),
+    createLeaf('Room title'),
+  ]);
+  const documentObject = {
+    querySelectorAll(selector) {
+      if (selector === '[data-e2e=categoryTabs-container]') {
+        return [categoryRoot];
+      }
+      if (selector === '[data-e2e=category-tabslist]') {
+        return [followingRoot];
+      }
+      if (selector === '#_douyin_live_scroll_container_') {
+        return [liveHomeRoot];
+      }
+      return [];
+    },
+  };
+
+  douyinVH.scanLiveUi(documentObject);
+
+  assert.deepEqual(
+    categoryRoot.children.map(node => node.textContent),
+    ['Trò chuyện', 'Múa', 'Văn hóa', 'Thể thao'],
+  );
+  assert.equal(followingRoot.children[0].textContent, 'Đang theo dõi');
+  assert.deepEqual(
+    liveHomeRoot.children.map(node => node.textContent),
+    ['Thêm livestream', 'Tất cả', 'Âm nhạc', 'Chủ phòng', 'Tạm thời rời đi', 'Room title'],
+  );
+});
+
 test('adds and removes compact search styling with the controller lifecycle', () => {
   const styles = new Map();
   const head = {

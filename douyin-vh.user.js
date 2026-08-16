@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.20
+// @version      0.9.21
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @match        https://live.douyin.com/*
@@ -35,6 +35,14 @@
     '关注': 'Theo dõi',
     '朋友': 'Bạn bè',
     '我的': 'Của tôi',
+    '聊天': 'Trò chuyện',
+    '舞蹈': 'Múa',
+    '文化': 'Văn hóa',
+    '运动': 'Thể thao',
+    '我的关注': 'Đang theo dõi',
+    '主播': 'Chủ phòng',
+    '暂时离开': 'Tạm thời rời đi',
+    '更多直播': 'Thêm livestream',
     '直播': 'Trực tiếp',
     '放映厅': 'Phòng chiếu',
     '短剧': 'Phim ngắn',
@@ -479,6 +487,11 @@
   const LIVE_GIFT_SELECTOR = '[data-e2e=gifts-container]';
   const LIVE_RECHARGE_SELECTOR = '[data-e2e=recharge-btn]';
   const LIVE_AUDIENCE_SELECTOR = '[data-e2e=live-room-audience]';
+  const LIVE_HOME_SELECTORS = Object.freeze([
+    '#_douyin_live_scroll_container_',
+    '[data-e2e=categoryTabs-container]',
+    '[data-e2e=category-tabslist]',
+  ]);
   const LIVE_UI_LABELS = new Set([
     '人气票',
     '小心心',
@@ -494,6 +507,16 @@
     '更多',
     '充值',
     '在线观众',
+    '聊天',
+    '舞蹈',
+    '文化',
+    '运动',
+    '我的关注',
+    '主播',
+    '暂时离开',
+    '更多直播',
+    '音乐',
+    '正在直播',
     '全部',
     '高等级用户',
   ]);
@@ -891,10 +914,11 @@
       return;
     }
 
-    const scopedRoots = [
+    const scopedRoots = new Set([
       ...documentObject.querySelectorAll(LIVE_GIFT_SELECTOR),
       ...documentObject.querySelectorAll(LIVE_RECHARGE_SELECTOR),
-    ];
+      ...LIVE_HOME_SELECTORS.flatMap(selector => documentObject.querySelectorAll(selector)),
+    ]);
     const audienceCounts = [...documentObject.querySelectorAll(LIVE_AUDIENCE_SELECTOR)];
 
     for (const rootElement of scopedRoots) {
