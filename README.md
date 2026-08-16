@@ -21,7 +21,7 @@ Userscript Việt hóa giao diện web Douyin, tập trung vào nhãn hệ thố
 4. Dán toàn bộ nội dung của `douyin-vh.user.js`.
 5. Lưu script, mở lại `https://www.douyin.com/` và tải lại trang.
 
-Có thể mở trực tiếp file `douyin-vh.user.js` trong trình duyệt để trình quản lý userscript nhận diện phần cài đặt.
+Có thể mở trực tiếp file `douyin-vh.user.js` trong trình duyệt để trình quản lý userscript nhận diện phần cài đặt. Metadata cập nhật dùng host `raw.githubusercontent.com` để Violentmonkey tải ổn định.
 
 ## Phạm vi an toàn
 

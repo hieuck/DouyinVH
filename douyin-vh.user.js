@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.8.0
+// @version      0.8.1
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
-// @updateURL    https://github.com/hieuck/DouyinVH/raw/refs/heads/main/douyin-vh.user.js
-// @downloadURL  https://github.com/hieuck/DouyinVH/raw/refs/heads/main/douyin-vh.user.js
+// @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
+// @downloadURL  https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
 // @run-at       document-idle
 // @grant        none
 // ==/UserScript==
