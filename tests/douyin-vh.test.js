@@ -12,6 +12,9 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('Tìm nội dung bạn quan tâm'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-e2e=searchbar-button]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('font-size: 14px'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('white-space: nowrap !important'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('.xgplayer-setting-title'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('min-width: max-content'), true);
   assert.equal(douyinVH.searchStyle.text.includes('!important'), true);
 });
 

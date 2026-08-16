@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.2
+// @version      0.9.3
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -254,6 +254,26 @@
     `input[placeholder='__DOUYIN_VH_SEARCH_TRANSLATED__'],`,
     '[data-e2e=searchbar-button] {',
     '  font-size: 14px !important;',
+    '}',
+    '',
+    '[data-e2e=searchbar-button],',
+    '.xgplayer-setting-label,',
+    '.xgplayer-setting-title,',
+    '.xgplayer-setting-playbackRatio {',
+    '  white-space: nowrap !important;',
+    '  width: max-content !important;',
+    '  min-width: max-content !important;',
+    '  flex-shrink: 0 !important;',
+    '}',
+    '.xgplayer-immersive-switch-setting,',
+    '.xgplayer-autoplay-setting,',
+    '.xgplayer-immersive-switch-setting .xgplayer-icon,',
+    '.xgplayer-autoplay-setting .xgplayer-icon,',
+    '.xgplayer-immersive-switch-setting .xgplayer-setting-label,',
+    '.xgplayer-autoplay-setting .xgplayer-setting-label {',
+    '  width: max-content !important;',
+    '  min-width: max-content !important;',
+    '  flex-shrink: 0 !important;',
     '}',
   ].join(String.fromCharCode(10))
     .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(
