@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.19
+// @version      0.9.20
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @match        https://live.douyin.com/*
@@ -285,6 +285,13 @@
     `input[placeholder='__DOUYIN_VH_SEARCH_TRANSLATED__'],`,
     '[data-e2e=searchbar-button] {',
     '  font-size: 14px !important;',
+    '}',
+    '',
+    'div:has(> [data-e2e=searchbar-input]) > :not([data-e2e=searchbar-input]) {',
+    '  font-size: 14px !important;',
+    '  line-height: 22px !important;',
+    '  white-space: nowrap !important;',
+    '  word-break: keep-all !important;',
     '}',
     '',
     '[data-e2e=searchbar-button],',

@@ -11,6 +11,8 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('搜索你感兴趣的内容'), true);
   assert.equal(douyinVH.searchStyle.text.includes('Tìm nội dung bạn quan tâm'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-e2e=searchbar-button]'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('div:has(> [data-e2e=searchbar-input]) > :not([data-e2e=searchbar-input])'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('line-height: 22px'), true);
   assert.equal(douyinVH.searchStyle.text.includes('font-size: 14px'), true);
   assert.equal(douyinVH.searchStyle.text.includes('white-space: nowrap !important'), true);
   assert.equal(douyinVH.searchStyle.text.includes('.xgplayer-setting-title'), true);
