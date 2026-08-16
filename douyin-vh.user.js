@@ -1,9 +1,11 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.1.0
+// @version      0.2.0
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
+// @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
+// @downloadURL  https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
 // @run-at       document-idle
 // @grant        none
 // ==/UserScript==
@@ -29,6 +31,24 @@
     '放映厅': 'Phòng chiếu',
     '短剧': 'Phim ngắn',
     '小游戏': 'Trò chơi nhỏ',
+    '全部': 'Tất cả',
+    '公开课': 'Khóa học mở',
+    '游戏': 'Trò chơi',
+    '二次元': 'Anime',
+    '音乐': 'Âm nhạc',
+    '影视': 'Phim ảnh',
+    '美食': 'Ẩm thực',
+    '知识': 'Kiến thức',
+    '小剧场': 'Sân khấu nhỏ',
+    '生活': 'Đời sống',
+    '体育': 'Thể thao',
+    '旅行': 'Du lịch',
+    '亲子': 'Gia đình',
+    '动物': 'Động vật',
+    '三农': 'Nông nghiệp',
+    '汽车': 'Ô tô',
+    '美妆': 'Làm đẹp',
+    '穿搭': 'Thời trang',
     '搜索': 'Tìm kiếm',
     '充钻石': 'Nạp kim cương',
     '客户端': 'Ứng dụng máy tính',
@@ -122,6 +142,8 @@
     '消息通知': 'Thông báo tin nhắn',
     '系统通知': 'Thông báo hệ thống',
     '评论和@': 'Bình luận và @',
+    '开启读屏标签': 'Bật nhãn đọc màn hình',
+    '读屏标签已关闭': 'Nhãn đọc màn hình đã tắt',
   });
 
   const SAFE_UI_SELECTOR = [

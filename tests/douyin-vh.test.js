@@ -56,3 +56,31 @@ test('translates UI attributes on descendant controls', () => {
 
   assert.equal(attributes.placeholder, 'Tìm kiếm');
 });
+
+test('translates the recommendation topic tabs and accessibility labels', () => {
+  const expectedTranslations = {
+    '全部': 'Tất cả',
+    '公开课': 'Khóa học mở',
+    '游戏': 'Trò chơi',
+    '二次元': 'Anime',
+    '音乐': 'Âm nhạc',
+    '影视': 'Phim ảnh',
+    '美食': 'Ẩm thực',
+    '知识': 'Kiến thức',
+    '生活': 'Đời sống',
+    '体育': 'Thể thao',
+    '旅行': 'Du lịch',
+    '亲子': 'Gia đình',
+    '动物': 'Động vật',
+    '三农': 'Nông nghiệp',
+    '汽车': 'Ô tô',
+    '美妆': 'Làm đẹp',
+    '穿搭': 'Thời trang',
+    '开启读屏标签': 'Bật nhãn đọc màn hình',
+    '读屏标签已关闭': 'Nhãn đọc màn hình đã tắt',
+  };
+
+  for (const [source, expected] of Object.entries(expectedTranslations)) {
+    assert.equal(douyinVH.translateExact(source), expected, source);
+  }
+});
