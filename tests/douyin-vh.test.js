@@ -39,14 +39,6 @@ test('exposes non-layout pass-through styling for live.douyin player', () => {
   assert.equal(douyinVH.liveDouyinStyle.text.includes('z-index:'), false);
 });
 
-test('exposes opt-in live player underlay styling separately from default mode', () => {
-  assert.match(
-    douyinVH.liveDouyinUnderlayStyle.text,
-    /\.LivePlayer_LivingPlayer \{[\s\S]*z-index: 0 !important;/u,
-  );
-  assert.equal(douyinVH.liveDouyinStyle.text.includes('z-index:'), false);
-});
-
 test('clips live player paint at the gift bar without changing layout', () => {
   assert.equal(
     douyinVH.calculateLivePlayerClipBottom({ bottom: 911 }, { top: 763 }),

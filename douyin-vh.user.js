@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.16
+// @version      0.9.17
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @match        https://live.douyin.com/*
@@ -267,7 +267,6 @@
   const SEARCH_STYLE_ID = 'douyin-vh-search-style';
   const LIVE_DOUYIN_STYLE_ID = 'douyin-vh-live-domain-style';
   const LIVE_DOUYIN_HOSTNAME = 'live.douyin.com';
-  const LIVE_DOUYIN_UNDERLAY_QUERY = 'douyin_vh_live_underlay=1';
   const LIVE_PLAYER_CLIP_BOTTOM_PROPERTY = '--douyin-vh-live-player-clip-bottom';
   const NO_WRAP_ATTRIBUTE = 'data-douyin-vh-nowrap';
   const TRANSLATED_ATTRIBUTE = 'data-douyin-vh-translated';
@@ -371,14 +370,6 @@
     '}',
     '.LivePlayer_LivingPlayer .douyin-player-controls {',
     '  pointer-events: auto !important;',
-    '}',
-  ].join(String.fromCharCode(10));
-
-  const LIVE_DOUYIN_UNDERLAY_STYLE_TEXT = [
-    LIVE_DOUYIN_STYLE_TEXT,
-    '',
-    '.LivePlayer_LivingPlayer {',
-    '  z-index: 0 !important;',
     '}',
   ].join(String.fromCharCode(10));
 
@@ -1083,7 +1074,7 @@
     }
   }
 
-  function ensureLiveDouyinStyle(documentObject, styleText = LIVE_DOUYIN_STYLE_TEXT) {
+  function ensureLiveDouyinStyle(documentObject) {
     if (!documentObject || typeof documentObject.createElement !== 'function') {
       return;
     }
@@ -1101,7 +1092,7 @@
       parent.appendChild(style);
     }
 
-    style.textContent = styleText;
+    style.textContent = LIVE_DOUYIN_STYLE_TEXT;
   }
 
   function removeLiveDouyinStyle(documentObject) {
@@ -1179,15 +1170,8 @@
     }
   }
 
-  function isLivePlayerUnderlayEnabled(locationObject) {
-    return String(locationObject?.href || '').includes(LIVE_DOUYIN_UNDERLAY_QUERY);
-  }
-
   function createLiveDouyinController(options = {}) {
     const documentObject = options.document || root?.document;
-    const styleText = options.underlayPlayer
-      ? LIVE_DOUYIN_UNDERLAY_STYLE_TEXT
-      : LIVE_DOUYIN_STYLE_TEXT;
     const MutationObserverConstructor = options.MutationObserver || root?.MutationObserver;
     const schedule = typeof options.setTimeout === 'function'
       ? options.setTimeout
@@ -1205,7 +1189,7 @@
     let started = false;
 
     function scan() {
-      ensureLiveDouyinStyle(documentObject, styleText);
+      ensureLiveDouyinStyle(documentObject);
       updateLivePlayerClip(documentObject);
     }
 
@@ -1373,7 +1357,6 @@
     const controller = root?.location?.hostname === LIVE_DOUYIN_HOSTNAME
       ? createLiveDouyinController({
         document: options.document || root?.document,
-        underlayPlayer: isLivePlayerUnderlayEnabled(root?.location),
       })
       : createController({
         ...options,
@@ -1401,10 +1384,6 @@
     liveDouyinStyle: Object.freeze({
       id: LIVE_DOUYIN_STYLE_ID,
       text: LIVE_DOUYIN_STYLE_TEXT,
-    }),
-    liveDouyinUnderlayStyle: Object.freeze({
-      id: LIVE_DOUYIN_STYLE_ID,
-      text: LIVE_DOUYIN_UNDERLAY_STYLE_TEXT,
     }),
     normalizeText,
     isGlobalUiLabel,
