@@ -274,6 +274,28 @@ test('translates account and creator popup labels without translating video titl
   );
 });
 
+test('translates lower settings and support popup labels', () => {
+  const expectedTranslations = {
+    '默认首页设置': 'Cài đặt trang chủ mặc định',
+    '启动时，默认进入：': 'Khi khởi động, mặc định vào:',
+    '推荐频道': 'Kênh Đề xuất',
+    '精选频道': 'Kênh Nổi bật',
+    '关注频道': 'Kênh Theo dõi',
+    '深浅模式': 'Chế độ sáng/tối',
+    '通用设置': 'Cài đặt chung',
+    '隐私设置': 'Cài đặt quyền riêng tư',
+    '通知设置': 'Cài đặt thông báo',
+    'AI设置': 'Cài đặt AI',
+    '键盘快捷键': 'Phím tắt',
+    '常见问题': 'Câu hỏi thường gặp',
+    '我的客服': 'Dịch vụ khách hàng',
+  };
+
+  for (const [source, expected] of Object.entries(expectedTranslations)) {
+    assert.equal(douyinVH.translateExact(source), expected, source);
+  }
+});
+
 test('starts in a browser page even when a CommonJS-like module global exists', () => {
   const source = fs.readFileSync(require.resolve('../douyin-vh.user.js'), 'utf8');
   const documentElement = {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.6.0
+// @version      0.7.0
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://github.com/hieuck/DouyinVH/raw/refs/heads/main/douyin-vh.user.js
@@ -159,6 +159,19 @@
     '创作者中心': 'Trung tâm nhà sáng tạo',
     '剪映专业版': 'CapCut Pro',
     'AI音乐创作': 'Sáng tác nhạc bằng AI',
+    '默认首页设置': 'Cài đặt trang chủ mặc định',
+    '启动时，默认进入：': 'Khi khởi động, mặc định vào:',
+    '推荐频道': 'Kênh Đề xuất',
+    '精选频道': 'Kênh Nổi bật',
+    '关注频道': 'Kênh Theo dõi',
+    '深浅模式': 'Chế độ sáng/tối',
+    '通用设置': 'Cài đặt chung',
+    '隐私设置': 'Cài đặt quyền riêng tư',
+    '通知设置': 'Cài đặt thông báo',
+    'AI设置': 'Cài đặt AI',
+    '键盘快捷键': 'Phím tắt',
+    '常见问题': 'Câu hỏi thường gặp',
+    '我的客服': 'Dịch vụ khách hàng',
     '历史记录': 'Lịch sử',
     '观看历史': 'Lịch sử xem',
     '稍后再看': 'Xem sau',
@@ -218,6 +231,7 @@
     '[id*=user-tabbar]',
     '[class*=trust-login-switch]',
     '[class*=user-post-list]',
+    '[class*=coopPanel]',
   ].join(',');
 
   const PROFILE_USER_INFO_SELECTOR = '[data-e2e=user-info], [class*=user-info]';
