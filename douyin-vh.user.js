@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.3.0
+// @version      0.4.0
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://github.com/hieuck/DouyinVH/raw/refs/heads/main/douyin-vh.user.js
@@ -38,6 +38,22 @@
     '放映厅': 'Phòng chiếu',
     '短剧': 'Phim ngắn',
     '小游戏': 'Trò chơi nhỏ',
+    '下载抖音精选': 'Tải Douyin Nổi bật',
+    '网络谣言曝光台': 'Trung tâm vạch trần tin đồn mạng',
+    '网上有害信息举报': 'Báo cáo thông tin có hại trên mạng',
+    '违法和不良信息举报': 'Báo cáo thông tin vi phạm và không lành mạnh',
+    '算法推荐专项举报': 'Báo cáo chuyên đề về đề xuất thuật toán',
+    '体育饭圈专项举报': 'Báo cáo chuyên đề về fandom thể thao',
+    '广告投放': 'Đặt quảng cáo',
+    '用户服务协议': 'Thỏa thuận dịch vụ người dùng',
+    '账号找回': 'Khôi phục tài khoản',
+    '联系我们': 'Liên hệ với chúng tôi',
+    '加入我们': 'Tham gia cùng chúng tôi',
+    '营业执照': 'Giấy phép kinh doanh',
+    '友情链接': 'Liên kết hữu ích',
+    '站点地图': 'Sơ đồ trang web',
+    '下载抖音': 'Tải Douyin',
+    '抖音电商': 'Thương mại điện tử Douyin',
     '全部': 'Tất cả',
     '公开课': 'Khóa học mở',
     '游戏': 'Trò chơi',
@@ -146,6 +162,13 @@
     '切换账号': 'Chuyển tài khoản',
     '创作者服务中心': 'Trung tâm dịch vụ nhà sáng tạo',
     '个人主页': 'Trang cá nhân',
+    '保存登录信息': 'Lưu thông tin đăng nhập',
+    '批量管理': 'Quản lý hàng loạt',
+    '私密作品': 'Tác phẩm riêng tư',
+    '合集': 'Bộ sưu tập',
+    '搜索你发布的作品': 'Tìm kiếm tác phẩm bạn đã đăng',
+    '日期筛选': 'Lọc theo ngày',
+    '该账号还未发布过作品哦～': 'Tài khoản này chưa đăng tác phẩm nào～',
     '关注列表': 'Danh sách đang theo dõi',
     '粉丝列表': 'Danh sách người hâm mộ',
     '消息通知': 'Thông báo tin nhắn',
@@ -162,6 +185,7 @@
     'header',
     'nav',
     'aside',
+    'footer',
     '[role=banner]',
     '[role=navigation]',
     '[role=dialog]',
@@ -171,7 +195,14 @@
     '[data-e2e*=sidebar]',
     '[data-e2e*=toolbar]',
     '[data-e2e*=search]',
+    '[data-e2e=page-footer]',
+    '[data-e2e=user-info-follow]',
+    '[id*=user-tabbar]',
+    '[class*=trust-login-switch]',
+    '[class*=user-post-list]',
   ].join(',');
+
+  const PROFILE_USER_INFO_SELECTOR = '[data-e2e=user-info], [class*=user-info]';
 
   const INTERACTIVE_SELECTOR = [
     'button',
@@ -224,9 +255,13 @@
       return value;
     }
 
+    return replaceNormalizedText(value, translations[normalized]);
+  }
+
+  function replaceNormalizedText(value, replacement) {
     const leadingWhitespace = value.match(/^\s*/u)?.[0] || '';
     const trailingWhitespace = value.match(/\s*$/u)?.[0] || '';
-    return leadingWhitespace + translations[normalized] + trailingWhitespace;
+    return leadingWhitespace + replacement + trailingWhitespace;
   }
 
   function isTextNodeAllowed({
@@ -242,6 +277,52 @@
 
   function hasClosest(element, selector) {
     return Boolean(element && typeof element.closest === 'function' && element.closest(selector));
+  }
+
+  function isProfileGenderElement(element) {
+    return Boolean(
+      element
+      && String(element.tagName || '').toLowerCase() === 'span'
+      && element.parentElement
+      && typeof element.parentElement.querySelector === 'function'
+      && element.parentElement.querySelector('svg')
+      && hasClosest(element, PROFILE_USER_INFO_SELECTOR),
+    );
+  }
+
+  function isProfileDynamicLabel(value, element) {
+    const normalized = normalizeText(value);
+    if (!hasClosest(element, PROFILE_USER_INFO_SELECTOR)) {
+      return false;
+    }
+
+    return /^\d[\d,.]*人正在直播$/u.test(normalized)
+      || /^抖音号：.+$/u.test(normalized)
+      || (normalized === '男' && isProfileGenderElement(element));
+  }
+
+  function translateProfileText(value, element) {
+    const translatedValue = translateExact(value);
+    if (translatedValue !== value) {
+      return translatedValue;
+    }
+
+    if (!isProfileDynamicLabel(value, element)) {
+      return value;
+    }
+
+    const normalized = normalizeText(value);
+    const liveMatch = normalized.match(/^(\d[\d,.]*)人正在直播$/u);
+    if (liveMatch) {
+      return replaceNormalizedText(value, `${liveMatch[1]} người đang phát trực tiếp`);
+    }
+
+    const accountMatch = normalized.match(/^抖音号：(.+)$/u);
+    if (accountMatch) {
+      return replaceNormalizedText(value, `Douyin ID: ${accountMatch[1]}`);
+    }
+
+    return replaceNormalizedText(value, 'Nam');
   }
 
   function isIgnoredElement(element) {
@@ -284,12 +365,14 @@
       return;
     }
 
-    if (!isTextNodeAllowed(getElementContext(parentElement)) && !isGlobalUiLabel(currentValue)) {
+    const currentValue = textNode.nodeValue;
+    const context = getElementContext(parentElement);
+    const isProfileLabel = isProfileDynamicLabel(currentValue, parentElement);
+    if (!isTextNodeAllowed(context) && !isGlobalUiLabel(currentValue) && !isProfileLabel) {
       return;
     }
 
-    const currentValue = textNode.nodeValue;
-    const translatedValue = translateExact(currentValue);
+    const translatedValue = translateProfileText(currentValue, parentElement);
     if (translatedValue !== currentValue) {
       textNode.nodeValue = translatedValue;
     }
@@ -465,6 +548,8 @@
     normalizeText,
     isGlobalUiLabel,
     translateExact,
+    translateProfileText,
+    translateTextNode,
     isTextNodeAllowed,
     translateElementAttributes,
     createController,

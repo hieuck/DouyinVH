@@ -96,6 +96,93 @@ test('translates combined topic tabs and exact system badges outside standard UI
   assert.equal(douyinVH.isGlobalUiLabel('caption của người dùng'), false);
 });
 
+test('translates the remaining profile and footer labels', () => {
+  const expectedTranslations = {
+    '下载抖音精选': 'Tải Douyin Nổi bật',
+    '网络谣言曝光台': 'Trung tâm vạch trần tin đồn mạng',
+    '网上有害信息举报': 'Báo cáo thông tin có hại trên mạng',
+    '违法和不良信息举报': 'Báo cáo thông tin vi phạm và không lành mạnh',
+    '算法推荐专项举报': 'Báo cáo chuyên đề về đề xuất thuật toán',
+    '体育饭圈专项举报': 'Báo cáo chuyên đề về fandom thể thao',
+    '广告投放': 'Đặt quảng cáo',
+    '用户服务协议': 'Thỏa thuận dịch vụ người dùng',
+    '账号找回': 'Khôi phục tài khoản',
+    '联系我们': 'Liên hệ với chúng tôi',
+    '加入我们': 'Tham gia cùng chúng tôi',
+    '营业执照': 'Giấy phép kinh doanh',
+    '友情链接': 'Liên kết hữu ích',
+    '站点地图': 'Sơ đồ trang web',
+    '下载抖音': 'Tải Douyin',
+    '抖音电商': 'Thương mại điện tử Douyin',
+    '保存登录信息': 'Lưu thông tin đăng nhập',
+    '批量管理': 'Quản lý hàng loạt',
+    '私密作品': 'Tác phẩm riêng tư',
+    '合集': 'Bộ sưu tập',
+    '短剧': 'Phim ngắn',
+    '搜索你发布的作品': 'Tìm kiếm tác phẩm bạn đã đăng',
+    '日期筛选': 'Lọc theo ngày',
+    '该账号还未发布过作品哦～': 'Tài khoản này chưa đăng tác phẩm nào～',
+  };
+
+  for (const [source, expected] of Object.entries(expectedTranslations)) {
+    assert.equal(douyinVH.translateExact(source), expected, source);
+  }
+});
+
+test('translates profile-only dynamic labels and leaves feed-like text unchanged', () => {
+  const profileElement = {
+    closest(selector) {
+      return selector.includes('user-info') ? this : null;
+    },
+  };
+  const genderElement = {
+    tagName: 'SPAN',
+    closest(selector) {
+      return selector.includes('user-info') ? this : null;
+    },
+    parentElement: {
+      querySelector(selector) {
+        return selector === 'svg' ? this : null;
+      },
+    },
+  };
+
+  assert.equal(
+    douyinVH.translateProfileText('  6人正在直播  ', profileElement),
+    '  6 người đang phát trực tiếp  ',
+  );
+  assert.equal(
+    douyinVH.translateProfileText('抖音号：1844133415', profileElement),
+    'Douyin ID: 1844133415',
+  );
+  assert.equal(douyinVH.translateProfileText('男', genderElement), 'Nam');
+  assert.equal(
+    douyinVH.translateProfileText('热门：6人正在直播', profileElement),
+    '热门：6人正在直播',
+  );
+  assert.equal(
+    douyinVH.translateProfileText('6人正在直播', { closest: () => null }),
+    '6人正在直播',
+  );
+});
+
+test('translates a text node in a footer without throwing', () => {
+  const textNode = {
+    nodeType: 3,
+    nodeValue: '广告投放',
+    parentElement: {
+      tagName: 'DIV',
+      closest(selector) {
+        return selector.includes('footer') ? this : null;
+      },
+    },
+  };
+
+  douyinVH.translateTextNode(textNode);
+
+  assert.equal(textNode.nodeValue, 'Đặt quảng cáo');
+});
+
 test('starts in a browser page even when a CommonJS-like module global exists', () => {
   const source = fs.readFileSync(require.resolve('../douyin-vh.user.js'), 'utf8');
   const documentElement = {
