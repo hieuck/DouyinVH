@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.10
+// @version      0.9.11
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -267,6 +267,7 @@
   const NO_WRAP_ATTRIBUTE = 'data-douyin-vh-nowrap';
   const TRANSLATED_ATTRIBUTE = 'data-douyin-vh-translated';
   const LIVE_TRANSLATED_ATTRIBUTE = 'data-douyin-vh-live-translated';
+  const LIVE_LAYER_ATTRIBUTE = 'data-douyin-vh-live-layer';
   const SEARCH_PLACEHOLDER = translations[String.fromCodePoint(
     0x641c,
     0x7d22,
@@ -329,9 +330,13 @@
     '  white-space: nowrap !important;',
     '  word-break: keep-all !important;',
     '}',
-    `[data-e2e=gifts-container] [${LIVE_TRANSLATED_ATTRIBUTE}] {`,
-    '  font-size: 10px !important;',
-    '}',
+     `[data-e2e=gifts-container] [${LIVE_TRANSLATED_ATTRIBUTE}] {`,
+     '  font-size: 10px !important;',
+     '}',
+     `[${LIVE_LAYER_ATTRIBUTE}] {`,
+     '  position: relative !important;',
+     '  z-index: 10000 !important;',
+     '}',
    ].join(String.fromCharCode(10))
     .replace('__DOUYIN_VH_SEARCH_SOURCE__', String.fromCodePoint(
       0x641c,
@@ -471,6 +476,7 @@
   const LIVE_GIFT_SELECTOR = '[data-e2e=gifts-container]';
   const LIVE_RECHARGE_SELECTOR = '[data-e2e=recharge-btn]';
   const LIVE_AUDIENCE_SELECTOR = '[data-e2e=live-room-audience]';
+  const LIVE_CHAT_SELECTOR = '[data-e2e=live-chatting]';
   const LIVE_UI_LABELS = new Set([
     '人气票',
     '小心心',
@@ -816,6 +822,12 @@
     }
   }
 
+  function markLiveOverlayLayer(element) {
+    if (element && element.nodeType === 1 && typeof element.setAttribute === 'function') {
+      element.setAttribute(LIVE_LAYER_ATTRIBUTE, 'true');
+    }
+  }
+
   function getDescendantElements(element) {
     if (!element || element.nodeType !== 1) {
       return [];
@@ -878,6 +890,21 @@
     )) || null;
   }
 
+  function findLiveSidePanel(audienceCount) {
+    let currentElement = audienceCount?.parentElement;
+    while (currentElement && currentElement.nodeType === 1) {
+      if (
+        typeof currentElement.querySelector === 'function'
+        && currentElement.querySelector(LIVE_CHAT_SELECTOR)
+      ) {
+        return currentElement;
+      }
+      currentElement = currentElement.parentElement;
+    }
+
+    return audienceCount?.parentElement?.parentElement || null;
+  }
+
   function scanLiveUi(documentObject) {
     if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
       return;
@@ -888,12 +915,14 @@
       ...documentObject.querySelectorAll(LIVE_RECHARGE_SELECTOR),
     ];
     for (const rootElement of scopedRoots) {
+      markLiveOverlayLayer(rootElement);
       for (const element of getDescendantElements(rootElement)) {
         translateLiveLeafText(element);
       }
     }
 
     for (const audienceCount of documentObject.querySelectorAll(LIVE_AUDIENCE_SELECTOR)) {
+      markLiveOverlayLayer(findLiveSidePanel(audienceCount));
       const audienceHeader = audienceCount.parentElement;
       for (const element of getDescendantElements(audienceHeader)) {
         translateLiveLeafText(element);

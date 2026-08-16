@@ -19,6 +19,8 @@ test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('max-width: none'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-translated]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-live-translated]'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('[data-douyin-vh-live-layer]'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('z-index: 10000'), true);
   assert.equal(douyinVH.searchStyle.text.includes('word-break: keep-all'), true);
   assert.equal(douyinVH.searchStyle.text.includes('font-size: 10px'), true);
   assert.equal(douyinVH.searchStyle.text.includes('Segoe UI'), true);
@@ -266,7 +268,8 @@ test('translates livestream gifts, recharge and audience filters without scannin
     };
   }
 
-  function createContainer(children) {
+  function createContainer(children, initialAttributes = {}) {
+    const attributes = new Map(Object.entries(initialAttributes));
     const container = {
       nodeType: 1,
       tagName: 'DIV',
@@ -274,6 +277,12 @@ test('translates livestream gifts, recharge and audience filters without scannin
       childNodes: children,
       children,
       parentElement: null,
+      getAttribute(name) {
+        return attributes.get(name) || null;
+      },
+      setAttribute(name, nextValue) {
+        attributes.set(name, nextValue);
+      },
       closest() {
         return null;
       },
@@ -288,6 +297,15 @@ test('translates livestream gifts, recharge and audience filters without scannin
         }
         return descendants;
       },
+      querySelector(selector) {
+        if (selector !== '[data-e2e=live-chatting]') {
+          return null;
+        }
+        return [container, ...container.querySelectorAll('*')].find(element => (
+          element.getAttribute?.('data-e2e') === 'live-chatting'
+        )) || null;
+      },
+      attributes,
     };
     for (const child of children) {
       child.parentElement = container;
@@ -321,7 +339,8 @@ test('translates livestream gifts, recharge and audience filters without scannin
     createLeaf('1000贡献用户(0)'),
     createLeaf('高等级用户'),
   ]);
-  createContainer([audienceHeader, audienceFilters]);
+  const chatRoot = createContainer([], { 'data-e2e': 'live-chatting' });
+  const audiencePanel = createContainer([audienceHeader, audienceFilters, chatRoot]);
 
   const documentObject = {
     querySelectorAll(selector) {
@@ -358,6 +377,8 @@ test('translates livestream gifts, recharge and audience filters without scannin
     ],
   );
   assert.equal(rechargeRoot.children[0].textContent, 'Nạp tiền');
+  assert.equal(giftsRoot.getAttribute('data-douyin-vh-live-layer'), 'true');
+  assert.equal(audiencePanel.getAttribute('data-douyin-vh-live-layer'), 'true');
   assert.equal(audienceLabel.textContent, 'Người xem trực tuyến');
   assert.deepEqual(
     audienceFilters.children.map(node => node.textContent),

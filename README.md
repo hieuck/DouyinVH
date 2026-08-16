@@ -11,7 +11,7 @@ Userscript Việt hóa giao diện web Douyin, tập trung vào nhãn hệ thố
 - Dịch menu tài khoản và menu nhà sáng tạo khi popup được mở.
 - Dịch popup cài đặt, giao diện sáng/tối, phím tắt và trợ giúp ở khu vực phía dưới.
 - Dịch popup giới thiệu Douyin, dịch vụ sáng tạo, an toàn và các nền tảng liên kết.
-- Dịch các nhãn điều khiển trong player feed, livestream và modal video chương; dịch quà tặng, đơn vị kim cương, bộ lọc người xem; thu nhỏ chữ trong ô tìm kiếm.
+- Dịch các nhãn điều khiển trong player feed, livestream và modal video chương; dịch quà tặng, đơn vị kim cương, bộ lọc người xem; giữ panel live trên lớp player; thu nhỏ chữ trong ô tìm kiếm.
 - Không cần build: file `.user.js` có thể cài trực tiếp.
 
 ## Cài đặt
