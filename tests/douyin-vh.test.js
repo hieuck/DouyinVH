@@ -16,7 +16,7 @@ test('exposes compact search styling', () => {
 });
 
 test('translates leaf labels rendered inside dynamic video players', () => {
-  const leafNodes = ['发送', '倍速', '智能', '清屏', '连播', '听抖音', '下一章', '视频标题'].map(value => ({
+  const leafNodes = ['发送', '倍速', '智能', '清屏', '连播', '听抖音', '下一章', '本场高光', '点击或按', '进入直播间', '视频标题'].map(value => ({
     nodeType: 1,
     tagName: 'SPAN',
     childElementCount: 0,
@@ -32,7 +32,10 @@ test('translates leaf labels rendered inside dynamic video players', () => {
     closest() {
       return null;
     },
-    querySelectorAll() {
+    querySelectorAll(selector) {
+      if (selector !== '*') {
+        assert.match(selector, /basePlayerContainer/u);
+      }
       return leafNodes;
     },
   };
@@ -46,7 +49,7 @@ test('translates leaf labels rendered inside dynamic video players', () => {
 
   assert.deepEqual(
     leafNodes.map(node => node.textContent),
-    ['Gửi', 'Tốc độ', 'Thông minh', 'Xóa màn hình', 'Phát liên tục', 'Nghe Douyin', 'Chương tiếp theo', '视频标题'],
+    ['Gửi', 'Tốc độ', 'Thông minh', 'Xóa màn hình', 'Phát liên tục', 'Nghe Douyin', 'Chương tiếp theo', 'Điểm nổi bật', 'Nhấp hoặc nhấn', 'Vào phòng livestream', '视频标题'],
   );
 });
 

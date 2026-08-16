@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.1
+// @version      0.9.2
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -231,6 +231,9 @@
     '你的关注': 'Đang theo dõi',
     '共创': 'Đồng sáng tạo',
     '正在直播': 'Đang phát trực tiếp',
+    '本场高光': 'Điểm nổi bật',
+    '点击或按': 'Nhấp hoặc nhấn',
+    '进入直播间': 'Vào phòng livestream',
   });
 
   const SEARCH_STYLE_ID = 'douyin-vh-search-style';
@@ -339,6 +342,9 @@
   ]);
   const PLAYER_UI_SELECTOR = [
     '[class*=modalPlayer]',
+    '[class*=basePlayerContainer]',
+    '[class*=douyin-player-controls]',
+    '[data-e2e=feed-live]',
     '[data-e2e=chapter-container]',
     '[class*=chapterVideoCard]',
   ].join(',');
@@ -356,6 +362,10 @@
     '详情',
     'TA的作品',
     '相关推荐',
+    '本场高光',
+    '点击或按',
+    '进入直播间',
+    '直播中',
     '章节要点',
     '内容由AI生成',
     '引言',
