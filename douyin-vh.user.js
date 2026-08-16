@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Douyin Việt Hóa
 // @namespace    https://github.com/douyin-vh
-// @version      0.9.0
+// @version      0.9.1
 // @description  Việt hóa giao diện web Douyin, không dịch nội dung feed.
 // @match        https://www.douyin.com/*
 // @updateURL    https://raw.githubusercontent.com/hieuck/DouyinVH/main/douyin-vh.user.js
@@ -246,8 +246,10 @@
     0x5bb9,
   )];
   const SEARCH_STYLE_TEXT = [
+    '[data-e2e=searchbar-input],',
     `input[placeholder='__DOUYIN_VH_SEARCH_SOURCE__'],`,
-    `input[placeholder='__DOUYIN_VH_SEARCH_TRANSLATED__'] {`,
+    `input[placeholder='__DOUYIN_VH_SEARCH_TRANSLATED__'],`,
+    '[data-e2e=searchbar-button] {',
     '  font-size: 14px !important;',
     '}',
   ].join(String.fromCharCode(10))
@@ -334,6 +336,30 @@
     '读屏标签已关闭',
     '你的关注',
     '共创',
+  ]);
+  const PLAYER_UI_SELECTOR = [
+    '[class*=modalPlayer]',
+    '[data-e2e=chapter-container]',
+    '[class*=chapterVideoCard]',
+  ].join(',');
+  const PLAYER_UI_LABELS = new Set([
+    '发送',
+    '倍速',
+    '智能',
+    '清屏',
+    '连播',
+    '听抖音',
+    '下一章',
+    '点击推荐',
+    '消息',
+    '评论',
+    '详情',
+    'TA的作品',
+    '相关推荐',
+    '章节要点',
+    '内容由AI生成',
+    '引言',
+    '音乐特点',
   ]);
 
   function normalizeText(value) {
@@ -548,6 +574,44 @@
     }
   }
 
+  function translatePlayerLeafText(element) {
+    if (!element || element.nodeType !== 1 || isIgnoredElement(element)) {
+      return;
+    }
+
+    if (Number(element.childElementCount || 0) > 0) {
+      return;
+    }
+
+    const currentValue = element.textContent;
+    if (!PLAYER_UI_LABELS.has(normalizeText(currentValue))) {
+      return;
+    }
+
+    const translatedValue = translateExact(currentValue);
+    if (translatedValue !== currentValue) {
+      element.textContent = translatedValue;
+    }
+  }
+
+  function scanPlayerUi(documentObject) {
+    if (!documentObject || typeof documentObject.querySelectorAll !== 'function') {
+      return;
+    }
+
+    const roots = documentObject.querySelectorAll(PLAYER_UI_SELECTOR);
+    for (const rootElement of roots) {
+      const elements = [rootElement];
+      if (typeof rootElement.querySelectorAll === 'function') {
+        elements.push(...rootElement.querySelectorAll('*'));
+      }
+
+      for (const element of elements) {
+        translatePlayerLeafText(element);
+      }
+    }
+  }
+
   function getTextNodeFilter(documentObject) {
     return documentObject?.defaultView?.NodeFilter?.SHOW_TEXT
       || root?.NodeFilter?.SHOW_TEXT
@@ -644,6 +708,7 @@
     function scan() {
       if (documentObject?.documentElement) {
         scanNode(documentObject.documentElement, documentObject);
+        scanPlayerUi(documentObject);
       }
     }
 
@@ -745,6 +810,8 @@
     translateProfileText,
     translateFooterText,
     translateTextNode,
+    translatePlayerLeafText,
+    scanPlayerUi,
     isTextNodeAllowed,
     translateElementAttributes,
     createController,

@@ -10,8 +10,44 @@ test('translates an exact UI label while preserving surrounding whitespace', () 
 test('exposes compact search styling', () => {
   assert.equal(douyinVH.searchStyle.text.includes('搜索你感兴趣的内容'), true);
   assert.equal(douyinVH.searchStyle.text.includes('Tìm nội dung bạn quan tâm'), true);
+  assert.equal(douyinVH.searchStyle.text.includes('[data-e2e=searchbar-button]'), true);
   assert.equal(douyinVH.searchStyle.text.includes('font-size: 14px'), true);
   assert.equal(douyinVH.searchStyle.text.includes('!important'), true);
+});
+
+test('translates leaf labels rendered inside dynamic video players', () => {
+  const leafNodes = ['发送', '倍速', '智能', '清屏', '连播', '听抖音', '下一章', '视频标题'].map(value => ({
+    nodeType: 1,
+    tagName: 'SPAN',
+    childElementCount: 0,
+    textContent: value,
+    closest() {
+      return null;
+    },
+  }));
+  const playerRoot = {
+    nodeType: 1,
+    tagName: 'DIV',
+    childElementCount: leafNodes.length,
+    closest() {
+      return null;
+    },
+    querySelectorAll() {
+      return leafNodes;
+    },
+  };
+  const documentObject = {
+    querySelectorAll() {
+      return [playerRoot];
+    },
+  };
+
+  douyinVH.scanPlayerUi(documentObject);
+
+  assert.deepEqual(
+    leafNodes.map(node => node.textContent),
+    ['Gửi', 'Tốc độ', 'Thông minh', 'Xóa màn hình', 'Phát liên tục', 'Nghe Douyin', 'Chương tiếp theo', '视频标题'],
+  );
 });
 
 test('adds and removes compact search styling with the controller lifecycle', () => {
